@@ -543,6 +543,15 @@ figure { margin: 0; }
   font-family: var(--font-mono); font-size: var(--text-sm);
 }
 #ed-bar.is-on { display: flex; }
+.ed-open-line { margin: var(--sp-4) 0 0; }
+#ed-open {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--haze); text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+#ed-open:hover { color: var(--blue-ink); border-bottom-color: var(--blue-ink); }
+body.is-editing #ed-open { visibility: hidden; }
 #ed-bar button {
   font: inherit; color: var(--paper); background: transparent;
   border: 1px solid var(--haze); border-radius: var(--r-sm);
@@ -1073,6 +1082,7 @@ figure { margin: 0; }
       hardware designs under the <a href="https://cern-ohl.web.cern.ch/" rel="license noopener noreferrer" target="_blank">CERN Open Hardware Licence</a>,
       control software under its published open source licence. Free to share,
       adapt and build on, with attribution.<span class="sr-only"> (these links open in a new tab)</span></p>
+    <p class="ed-open-line"><a id="ed-open" href="#edit">Edit this page</a></p>
   </div></footer>
 
 <script>/*! p5.js v1.11.3 January 22, 2025 */
@@ -1670,6 +1680,7 @@ window.p5 && (window.p5.disableFriendlyErrors = true);
     if (on) { return; }
     on = true;
     bar.classList.add('is-on');
+    document.body.classList.add('is-editing');
     each(SEL, function (el) { el.setAttribute('contenteditable', 'true'); });
     say('editing');
   }
@@ -1677,6 +1688,7 @@ window.p5 && (window.p5.disableFriendlyErrors = true);
   function leave() {
     on = false;
     bar.classList.remove('is-on');
+    document.body.classList.remove('is-editing');
     each('[contenteditable]', function (el) { el.removeAttribute('contenteditable'); });
     if (location.hash === '#edit') { history.replaceState(null, '', location.pathname); }
   }
@@ -1726,7 +1738,7 @@ window.p5 && (window.p5.disableFriendlyErrors = true);
       }
     }, d);
     var body = d.querySelector('body');
-    if (body) { body.classList.add('no-js'); }
+    if (body) { body.classList.remove('is-editing'); body.classList.add('no-js'); }
     var nav = d.querySelector('#site-nav');
     if (nav) { nav.classList.remove('is-open'); }
     var mb = d.querySelector('#menu-btn');
@@ -1797,6 +1809,11 @@ window.p5 && (window.p5.disableFriendlyErrors = true);
     var t = (e.clipboardData || window.clipboardData).getData('text/plain');
     document.execCommand('insertText', false, t);
   });
+
+  var opener = document.getElementById('ed-open');
+  if (opener) {
+    opener.addEventListener('click', function (e) { e.preventDefault(); enter(); });
+  }
 
   function check() { if (location.hash === '#edit') { enter(); } }
   window.addEventListener('hashchange', check);
