@@ -4,7 +4,7 @@
 
 <https://biocenter.opening.science>
 
-## The premise
+## Intro
 
 Most experiments still happen in a local lab, performed by a person standing
 at a bench. Compute met the same limit decades ago and answered it with data
@@ -22,7 +22,7 @@ a machine in Interlaken, which moves a real sample. Onboard sensors and a
 camera report what happened. On the way back, machine vision reads the images
 and world models turn them into a state the team can act on.
 
-## The first prototype
+## First prototype
 
 The **OpenDrop BioServer** was installed on 1 September 2026 in Interlaken,
 Switzerland. Two OpenDrop boards sit in a glass enclosure. Each carries an
@@ -33,7 +33,7 @@ machine, and the unit answers to a web page over the network.
 
 Live control page: <https://opendrop.151-115-76-163.sslip.io/>
 
-## What follows from publishing the machine
+## Features
 
 - **Open hardware.** The design files for every machine in the rack are public.
 - **Open source.** The control software is published and runs on hardware you own.
@@ -48,7 +48,7 @@ Live control page: <https://opendrop.151-115-76-163.sslip.io/>
 - **Observation first.** The state of the sample returns before the next
   command is sent.
 
-## Who is building it
+## Who
 
 | | |
 |---|---|
