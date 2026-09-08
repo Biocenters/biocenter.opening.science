@@ -1,0 +1,5 @@
+# Commercially licensed typefaces (Maxitype Selecta, ABC Diatype Semi Mono).
+# Deployed to the server, never redistributed through this repository.
+fonts/
+# Rolling snapshots kept by the server, not history.
+.backups/
