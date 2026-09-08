@@ -30,3 +30,10 @@ gradient is used.
 The page is edited in place at `/#edit`, protected by a password nginx checks
 on `PUT /save`. Each save triggers a timestamped snapshot in `.backups/` and a
 commit here.
+
+## Where this comes from
+
+The server at `bot` is the source of truth. Each save writes the page, keeps a
+timestamped snapshot, commits here and pushes to GitHub with a repository
+deploy key. The push is best effort: if GitHub is unreachable the edit is
+still saved and committed, and the next save catches up.
