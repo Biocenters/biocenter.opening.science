@@ -72,6 +72,16 @@ p5.js sketches and its images, so deploying it means copying a single file. It
 follows the Open Science Foundation brand,
 [osf-brand](https://github.com/Opening-Science/osf-brand).
 
+The palette is the OSF palette unchanged, and the type scale uses OSF values.
+The root font size steps 13.2px to 17px across the same six breakpoints as
+opening.science, so every rem token resizes with the viewport the way the OSF
+theme intends. Two deliberate deviations: `--text-xs` (0.75rem) has no OSF
+counterpart and is local to this page, and the local scale names run one step
+below the canonical ones. Both are recorded in the token block in `index.html`.
+
+osf-brand's web harness targets Nuxt 4 and Astro 5. This page is neither, so
+its checks do not apply here and the tokens are carried by hand.
+
 `fonts/` is deliberately absent. Selecta (Maxitype) and ABC Diatype Semi Mono
 are licensed commercially for this subdomain and cannot be redistributed, so
 they live on the server only. A clone renders in fallback faces.
