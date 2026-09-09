@@ -101,3 +101,15 @@ its checks do not apply here and the tokens are carried by hand.
 `fonts/` is deliberately absent. Selecta (Maxitype) and ABC Diatype Semi Mono
 are licensed commercially for this subdomain and cannot be redistributed, so
 they live on the server only. A clone renders in fallback faces.
+
+## How it changes
+
+The page is edited in place at , guarded by a password nginx checks on
+. Every save keeps a timestamped snapshot on the server, commits
+here and pushes.
+
+The sync runs both ways. A pull request merged on GitHub is pulled onto the
+server within five minutes and deployed, so contributors do not need shell
+access to change the site. A local edit and a merged pull request landing at
+the same time are reconciled by rebase.
+
