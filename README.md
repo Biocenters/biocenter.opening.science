@@ -59,7 +59,10 @@ Live control page: <https://opendrop.151-115-76-163.sslip.io/>
 
 ## Brand and marks
 
-The five-dot mark and the favicon are this site's own. The Open Science
+The favicon is this site's own. The header carries the Open Science
+Foundation website mark (`assets/logo/OSF_mark_website.svg`, sha256
+`bef9c1f9...07aa1935`), and the footer carries the full lockup. Both are
+reproduced unmodified, at the request of the Foundation. The Open Science
 Foundation lockup in the footer is reproduced **unmodified** under the
 [OSF Brand Assets Permission](https://github.com/Opening-Science/osf-brand/blob/main/LICENSES/LicenseRef-OSF-Brand-Assets.txt)
 (`LicenseRef-OSF-Brand-Assets`), to identify the host of this partnership. It is
