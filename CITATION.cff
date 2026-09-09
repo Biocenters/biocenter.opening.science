@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: If you refer to this work, please cite it as below.
+title: "Open Biocenter: a laboratory you can operate from anywhere"
+type: software
+license: CC-BY-4.0
+url: https://biocenter.opening.science/
+repository-code: https://github.com/Biocenters/biocenter.opening.science
+authors:
+  - family-names: Gaudenz
+    given-names: Urs
+    affiliation: GaudiLabs
+    orcid: https://orcid.org/0000-0002-0845-3202
+  - family-names: Moss
+    given-names: Miranda
+    affiliation: GaudiLabs
+  - family-names: Labrune
+    given-names: Jean-Baptiste
+    affiliation: Radical Design Studio
+    orcid: https://orcid.org/0000-0002-6472-5030
+keywords:
+  - open hardware
+  - open science
+  - remote experimentation
+  - digital microfluidics
+  - laboratory automation

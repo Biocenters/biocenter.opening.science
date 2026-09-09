@@ -1,0 +1,24 @@
+{
+  "title": "Open Biocenter: a laboratory you can operate from anywhere",
+  "upload_type": "software",
+  "license": "cc-by-4.0",
+  "access_right": "open",
+  "language": "eng",
+  "description": "<p>An Open Biocenter is a building that holds machines instead of benches. Each machine automates one class of experiment and occupies one slot in a rack, and every operation available at the bench is available over the network.</p><p>This is the source of the project site at <a href=\"https://biocenter.opening.science\">biocenter.opening.science</a>, a single self-contained page. The first prototype, the OpenDrop BioServer, was installed on 1 September 2026 in Interlaken, Switzerland.</p><p>Typefaces are licensed commercially and are excluded from this archive.</p>",
+  "creators": [
+    { "name": "Gaudenz, Urs", "affiliation": "GaudiLabs", "orcid": "0000-0002-0845-3202" },
+    { "name": "Moss, Miranda", "affiliation": "GaudiLabs" },
+    { "name": "Labrune, Jean-Baptiste", "affiliation": "Radical Design Studio", "orcid": "0000-0002-6472-5030" }
+  ],
+  "contributors": [
+    { "name": "Etzrodt, Martin", "type": "HostingInstitution", "affiliation": "Open Science Foundation", "orcid": "0000-0003-1928-3904" }
+  ],
+  "keywords": [
+    "open hardware", "open science", "remote experimentation", "digital microfluidics",
+    "laboratory automation", "self-driving labs", "OpenDrop", "reproducibility"
+  ],
+  "related_identifiers": [
+    { "identifier": "https://biocenter.opening.science/", "relation": "isDescribedBy", "scheme": "url" },
+    { "identifier": "https://github.com/Biocenters/biocenter.opening.science", "relation": "isSupplementTo", "scheme": "url" }
+  ]
+}
