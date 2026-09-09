@@ -104,8 +104,8 @@ they live on the server only. A clone renders in fallback faces.
 
 ## How it changes
 
-The page is edited in place at , guarded by a password nginx checks on
-. Every save keeps a timestamped snapshot on the server, commits
+The page is edited in place at `/#edit`, guarded by a password nginx checks
+on `PUT /save`. Every save keeps a timestamped snapshot on the server, commits
 here and pushes.
 
 The sync runs both ways. A pull request merged on GitHub is pulled onto the
