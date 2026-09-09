@@ -144,9 +144,19 @@
   --font-body: "Selecta", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: "ABC Diatype Semi Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  /* Type scale. Every value below is an OSF web token; the local names run one
+     step lower than the canonical ones, so the map is recorded here rather than
+     renamed across the page:
+       --text-lg  1.3125rem = osf --text-1xl
+       --text-xl  1.875rem  = osf --text-2xl
+       --text-2xl 2.25rem   = osf --text-3xl
+       --text-3xl 2.5rem    = osf --text-4xl
+       --text-4xl 3.25rem   = osf --text-5xl
+     --text-xs has no OSF counterpart and is local to this page (fine print).
+     OSF leaves --text-lg unset on the content site; the name is reused here. */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;   --lh-sm: 1.2;
-  --text-base: 1.0625rem; --lh-base: 1.55;
+  --text-base: 1rem;     --lh-base: 1.5;
   --text-lg: 1.3125rem;
   --text-xl: 1.875rem;   --lh-tight: 1.15;
   --text-2xl: 2.25rem;
@@ -156,7 +166,7 @@
   --sp-1: 0.5rem;  --sp-2: 0.75rem; --sp-3: 1rem;   --sp-4: 1.5rem;
   --sp-5: 2rem;    --sp-6: 3rem;    --sp-7: 4.5rem; --sp-8: 7rem;
 
-  --wrap: 84rem;
+  --wrap: 87rem;      /* osf --spacing-container */
   --measure: 46rem;
   --r-sm: 0.375rem;
   --r-md: 0.75rem;
@@ -165,7 +175,20 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+
+/* Responsive root size, copied from the OSF web theme. Every rem token above
+   is sized against it, so the whole page steps down on small screens and up on
+   very wide ones exactly as opening.science does. Without this the page held a
+   fixed 16px root and ran about 20% large on a phone. */
+html {
+  -webkit-text-size-adjust: 100%;
+  font-size: 13.2px;
+}
+@media (min-width: 40rem) { html { font-size: 13.6px; } }
+@media (min-width: 48rem) { html { font-size: 14px; } }
+@media (min-width: 64rem) { html { font-size: 15px; } }
+@media (min-width: 80rem) { html { font-size: 16px; } }
+@media (min-width: 96rem) { html { font-size: 17px; } }
 
 body {
   margin: 0;
