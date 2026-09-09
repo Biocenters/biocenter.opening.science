@@ -5,6 +5,9 @@
 <title>Open Biocenter - A laboratory you can operate from anywhere</title>
 <meta name="description" content="An Open Biocenter is a laboratory you can operate from anywhere: racks of open hardware machines in Interlaken, run over the web by teams across the planet.">
 <link rel="canonical" href="https://biocenter.opening.science/">
+<!-- Favicon: this site's own mark, inline so the page stays one file.
+     osf-black on light chrome, osf-cream-light on dark. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cstyle%3Ecircle%7Bfill:%231d1d1d%7D@media(prefers-color-scheme:dark)%7Bcircle%7Bfill:%23f8f8f4%7D%7D%3C/style%3E%3Ccircle cx='11' cy='4' r='2.4'/%3E%3Ccircle cx='4' cy='11' r='2.4'/%3E%3Ccircle cx='18' cy='11' r='2.4'/%3E%3Ccircle cx='11' cy='18' r='2.4'/%3E%3Ccircle cx='11' cy='11' r='2.4'/%3E%3C/svg%3E">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="author" content="Open Science Foundation">
 <meta name="theme-color" content="#1d1d1d">
@@ -489,6 +492,20 @@ figure { margin: 0; }
 /* --- Footer ------------------------------------------------------------- */
 .site-footer { border-top: 1px solid var(--line); padding: var(--sp-7) 0 var(--sp-6); }
 
+/* Host credit. The OSF lockup keeps its supplied proportions and colours;
+   only the rendered size changes. Kept visually separate from this site's own
+   mark above so it reads as a credit, not as the site's identity. */
+.hosted-by {
+  margin-top: var(--sp-5);
+  display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+}
+.hosted-label {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.osf-lockup { width: 11rem; height: auto; }
+.hosted-by a:focus-visible { outline: 2px solid var(--blue-ink); outline-offset: 4px; }
+
 /* LicenseNotice, per osf-brand/web-harness: one quiet mono line on a
    hairline rule, never a filled panel. */
 .license {
@@ -589,7 +606,7 @@ body.is-editing #ed-open { visibility: hidden; }
   <div class="bar">
     <a class="wordmark" href="#top">
       <svg viewBox="0 0 22 22" aria-hidden="true" focusable="false">
-        <g fill="#111111">
+        <g fill="var(--ink)">
           <circle cx="11" cy="4" r="2.4"></circle><circle cx="4" cy="11" r="2.4"></circle>
           <circle cx="18" cy="11" r="2.4"></circle><circle cx="11" cy="18" r="2.4"></circle>
           <circle cx="11" cy="11" r="2.4"></circle>
@@ -1046,7 +1063,7 @@ body.is-editing #ed-open { visibility: hidden; }
     <div class="foot-grid">
       <div>
         <svg width="26" height="26" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
-          <g fill="#111111">
+          <g fill="var(--ink)">
             <circle cx="11" cy="4" r="2.4"></circle><circle cx="4" cy="11" r="2.4"></circle>
             <circle cx="18" cy="11" r="2.4"></circle><circle cx="11" cy="18" r="2.4"></circle>
             <circle cx="11" cy="11" r="2.4"></circle>
@@ -1074,6 +1091,21 @@ body.is-editing #ed-open { visibility: hidden; }
           <li><a class="ext" href="https://github.com/GaudiLabs">github.com/GaudiLabs</a></li>
         </ul>
       </nav>
+    </div>
+    <!-- Open Science Foundation lockup, reproduced unmodified under the OSF
+         Brand Assets Permission (LicenseRef-OSF-Brand-Assets) to identify the
+         host of this partnership. Base64 of osf-brand assets/logo/
+         OSF_positive_original.svg, sha256 6a2813ca…e86d5f8a, byte-identical to
+         that repository's manifest. Do not recolour, crop or redraw it, and do
+         not move it into the header: it credits the host, it is not this
+         site's identity. See README, "Brand and marks".
+         SPDX-License-Identifier: LicenseRef-OSF-Brand-Assets -->
+    <div class="hosted-by">
+      <span class="hosted-label">Hosted by</span>
+      <a href="https://opening.science" rel="noopener">
+        <img class="osf-lockup" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iV29ydG1hcmtlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTkuNzQgMjM2Ljk4Ij4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjYzBiZWIyOwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8Zz4KICAgIDxwYXRoIGQ9Ik0xNDguNDcsOTguMjRjLTEuNDUtMi41NS0yLjItNS41LTIuMi04Ljc1LDAtNi4yNSwzLjEtMTEuNzUsOC4yNS0xNC43NSwyLjU1LTEuNSw1LjQtMi4yNSw4LjUtMi4yNSw2LjIsMCwxMS42LDMuMiwxNC41NSw4LjQsMS40NSwyLjYsMi4yLDUuNDUsMi4yLDguNiwwLDYuNTUtMy4xLDExLjktOC4yLDE0LjgtMi41NSwxLjQ1LTUuNCwyLjItOC41NSwyLjItNi4yNSwwLTExLjYtMy4wNS0xNC41NS04LjI1Wk0xNzMuNzcsODkuNDljMC02LjktNC43NS0xMS41LTEwLjc1LTExLjVzLTEwLjc1LDQuNi0xMC43NSwxMS41LDQuNzUsMTEuNSwxMC43NSwxMS41LDEwLjc1LTQuNiwxMC43NS0xMS41WiIvPgogICAgPHBhdGggZD0iTTE4NC41Nyw4MC45OWg1Ljc1djNjMS4yNS0xLjk1LDQtMy41LDcuNzUtMy41LDcuMDUsMCwxMS41LDUuMDUsMTEuNSwxMywwLDcuNS00LjYsMTMtMTEuNSwxMy0zLjc1LDAtNi4zNS0xLjU1LTcuNS0zLjV2MTJoLTZ2LTM0Wk0yMDMuNTcsOTMuNDljMC01LjA1LTIuMy04LTYuNS04cy02LjUsMy44LTYuNSw4LDIuMSw3Ljk1LDYuNSw3Ljk1YzQuMTUsMCw2LjUtMy44NSw2LjUtNy45NVoiLz4KICAgIDxwYXRoIGQ9Ik0yMTIuODcsOTMuNDljMC03LjQ1LDUuMDUtMTMsMTIuMjUtMTMsNy42NSwwLDEyLDUuNSwxMiwxNHYxaC0xOC4yNWMuNDUsMy45NSwzLjE1LDYuMjUsNi43NSw2LjI1LDIuOCwwLDQuOTUtMS41LDYtMy43bDUsMS45NWMtMi4wNSw0LjE1LTUuNjUsNi41LTExLDYuNS03LjcsMC0xMi43NS01LjA1LTEyLjc1LTEzWk0yMzEuMTIsOTEuMjRjMC0zLjY1LTIuNjUtNi02LTZzLTUuNzUsMi4zLTYuMjUsNmgxMi4yNVoiLz4KICAgIDxwYXRoIGQ9Ik0yNDEuOTIsODAuOTloNS43NXYzYzEuMi0xLjgsMy45LTMuNSw3LjUtMy41LDUuOSwwLDkuMjUsMy45NSw5LjI1LDEwdjE1LjVoLTZ2LTE0Ljc1YzAtMy45NS0xLjctNS43NS00Ljc1LTUuNzUtMy44NSwwLTUuNzUsMi41NS01Ljc1LDYuNzV2MTMuNzVoLTZ2LTI1WiIvPgogICAgPHBhdGggZD0iTTI4MC45Nyw5NS43NGg2LjI1Yy4yNSwzLjIsMyw1LjUsNy43NSw1LjUsNCwwLDYuNzUtMiw2Ljc1LTQuNzUsMC0xLjgtMS40NS0yLjg1LTMuMS0zLjQtLjg1LS4yNS0xLjg1LS41LTMtLjdsLTMuMTUtLjY1Yy00LjU1LS45NS03LjMtMS42NS05LjQtNC4wNS0xLjA1LTEuMi0xLjYtMi44NS0xLjYtNC45NSwwLTYuNDUsNS0xMC4yNSwxMy0xMC4yNSw3LjUsMCwxMi44LDMuODUsMTMsMTAuMjVoLTYuMjVjLS4yNS0zLjA1LTIuODUtNS03LjI1LTUtMy42NSwwLTYuMjUsMS42LTYuMjUsNC4yNSwwLDEuOCwxLjQ1LDIuODUsMy4xLDMuNC44NS4yNSwxLjg1LjUsMywuN2wzLjE1LjY1YzQuNTUuOTUsNy4zNSwxLjY1LDkuNDUsNC4wNSwxLjA1LDEuMiwxLjU1LDIuODUsMS41NSw0Ljk1LDAsNi43NS01LjA1LDEwLjc1LTEzLjUsMTAuNzVzLTEzLjI1LTQtMTMuNS0xMC43NVoiLz4KICAgIDxwYXRoIGQ9Ik0zMTEuNTIsOTMuNDljMC03LjQ1LDUuMy0xMywxMi4yNS0xM3MxMC43NSw1LDExLjI1LDkuNWgtNmMtLjU1LTIuMS0xLjk1LTQuNS01LjI1LTQuNS0zLjUsMC02LDMuMS02LDhzMi41LDgsNiw4YzMuMywwLDQuNy0yLjQsNS4yNS00LjVoNmMtLjUsNC41LTQuNiw5LjUtMTEuMjUsOS41LTcuNDUsMC0xMi4yNS01LjUtMTIuMjUtMTNaIi8+CiAgICA8cGF0aCBkPSJNMzM5LjA2LDc0Ljc0YzAtMiwxLjUtMy41LDMuNS0zLjVzMy41LDEuNSwzLjUsMy41LTEuNSwzLjUtMy41LDMuNS0zLjUtMS41LTMuNS0zLjVaTTMzOS41Niw4MC45OWg2djI1aC02di0yNVoiLz4KICAgIDxwYXRoIGQ9Ik0zNTAuMzEsOTMuNDljMC03LjQ1LDUuMDUtMTMsMTIuMjUtMTMsNy42NSwwLDEyLDUuNSwxMiwxNHYxaC0xOC4yNWMuNDUsMy45NSwzLjE1LDYuMjUsNi43NSw2LjI1LDIuOCwwLDQuOTUtMS41LDYtMy43bDUsMS45NWMtMi4wNSw0LjE1LTUuNjUsNi41LTExLDYuNS03LjcsMC0xMi43NS01LjA1LTEyLjc1LTEzWk0zNjguNTcsOTEuMjRjMC0zLjY1LTIuNjUtNi02LTZzLTUuNzUsMi4zLTYuMjUsNmgxMi4yNVoiLz4KICAgIDxwYXRoIGQ9Ik0zNzkuMzEsODAuOTloNS43NXYzYzEuMi0xLjgsMy45LTMuNSw3LjUtMy41LDUuOSwwLDkuMjUsMy45NSw5LjI1LDEwdjE1LjVoLTZ2LTE0Ljc1YzAtMy45NS0xLjctNS43NS00Ljc1LTUuNzUtMy44NSwwLTUuNzUsMi41NS01Ljc1LDYuNzV2MTMuNzVoLTZ2LTI1WiIvPgogICAgPHBhdGggZD0iTTQwNi4zMSw5My40OWMwLTcuNDUsNS4zLTEzLDEyLjI1LTEzczEwLjc1LDUsMTEuMjUsOS41aC02Yy0uNTUtMi4xLTEuOTUtNC41LTUuMjUtNC41LTMuNSwwLTYsMy4xLTYsOHMyLjUsOCw2LDhjMy4zLDAsNC43LTIuNCw1LjI1LTQuNWg2Yy0uNSw0LjUtNC42LDkuNS0xMS4yNSw5LjUtNy40NSwwLTEyLjI1LTUuNS0xMi4yNS0xM1oiLz4KICAgIDxwYXRoIGQ9Ik00MzIuODYsOTMuNDljMC03LjQ1LDUuMDUtMTMsMTIuMjUtMTMsNy42NSwwLDEyLDUuNSwxMiwxNHYxaC0xOC4yNWMuNDUsMy45NSwzLjE1LDYuMjUsNi43NSw2LjI1LDIuOCwwLDQuOTUtMS41LDYtMy43bDUsMS45NWMtMi4wNSw0LjE1LTUuNjUsNi41LTExLDYuNS03LjcsMC0xMi43NS01LjA1LTEyLjc1LTEzWk00NTEuMTEsOTEuMjRjMC0zLjY1LTIuNjUtNi02LTZzLTUuNzUsMi4zLTYuMjUsNmgxMi4yNVoiLz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE0OC41MiwxMjIuOTloMjIuNXY1LjVoLTE2LjV2Ny41aDE1LjV2NS41aC0xNS41djE0LjVoLTZ2LTMzWiIvPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTc0LjA3LDE0My40OWMwLTcuNDUsNS41NS0xMywxMi43NS0xM3MxMi43NSw1LjU1LDEyLjc1LDEzYzAsNy44NS01LjQsMTMtMTIuNzUsMTNzLTEyLjc1LTUuMTUtMTIuNzUtMTNaTTE5My41NywxNDMuNDljMC00LjUtMi41NS04LTYuNzUtOHMtNi43NSwzLjUtNi43NSw4YzAsNSwyLjUsOCw2Ljc1LDhzNi43NS0zLDYuNzUtOFoiLz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTIwNC4xMiwxNDYuNDl2LTE1LjVoNnYxNC43NWMwLDMuODUsMS44NSw1Ljc1LDUsNS43NSwzLjQsMCw1LjI1LTIuNiw1LjI1LTYuMjV2LTE0LjI1aDZ2MjVoLTUuNzV2LTNjLTEuMjUsMS45NS0zLjQsMy41LTcsMy41LTYuMDUsMC05LjUtMy41NS05LjUtMTBaIi8+CiAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0yMzIuNjcsMTMwLjk5aDUuNzV2M2MxLjItMS44LDMuOS0zLjUsNy41LTMuNSw1LjksMCw5LjI1LDMuOTUsOS4yNSwxMHYxNS41aC02di0xNC43NWMwLTMuOTUtMS43LTUuNzUtNC43NS01Ljc1LTMuODUsMC01Ljc1LDIuNTUtNS43NSw2Ljc1djEzLjc1aC02di0yNVoiLz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTI1OS42NywxNDMuNDljMC03LjUsNC42LTEzLDExLjUtMTMsMy43NSwwLDYuMzUsMS41NSw3LjUsMy41di0xMmg2djM0aC01Ljc1di0zYy0xLjI1LDEuOTUtNCwzLjUtNy43NSwzLjUtNy4wNSwwLTExLjUtNS4wNS0xMS41LTEzWk0yNzguNjcsMTQzLjQ5YzAtNC4xNS0yLjEtNy45NS02LjUtNy45NS00LjE1LDAtNi41LDMuODUtNi41LDcuOTUsMCw1LjA1LDIuMyw4LDYuNSw4czYuNS0zLjgsNi41LThaIi8+CiAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0yODkuNDcsMTQ4Ljc0YzAtNC4xNSwzLjItNi4yNSw3LjgtNy4xNS4yLDAsLjQ1LS4wNS43LS4xbDQuNzUtLjc1YzItLjM1LDMtLjcsMy0yLjUsMC0yLjItMS42NS0zLjI1LTQuMjUtMy4yNS0zLjA1LDAtNSwxLjM1LTUuMjUsNGgtNmMwLTUuMiw0Ljc1LTguNSwxMS4yNS04LjUsNy4yNSwwLDEwLjUsMy4zLDEwLjUsOS41djE2aC01Ljc1di0yLjVjLTEuNzUsMi00LjUsMy03Ljc1LDMtNC44NSwwLTktMi45LTktNy43NVpNMzA1Ljk3LDE0Ny43NHYtMy43NWwtNC41LDFjLTIuNTUuNTUtMy44NS45LTQuOCwxLjg1LS40NS40NS0uNywxLjEtLjcsMS45LDAsMi4xNSwyLjA1LDMuMjUsNC41LDMuMjUsMi44NSwwLDUuNS0xLjgsNS41LTQuMjVaIi8+CiAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0zMTkuNTIsMTQ5LjQ5di0xMy43NWgtNC4yNXYtNC41aDEuNWMyLjQ1LDAsMy41LTEuMiwzLjUtMy43NXYtM2g1LjI1djYuNWg1LjV2NC43NWgtNS41djEzYzAsMi4zNSwxLjA1LDMsMy4yNSwzaDIuMjV2NC4yNWMtMS41NS4xNS0zLC4yNS00LjI1LjI1LTQuNzUsMC03LjI1LTEuOTUtNy4yNS02Ljc1WiIvPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMzM0LjgyLDEyNC43NGMwLTIsMS41LTMuNSwzLjUtMy41czMuNSwxLjUsMy41LDMuNS0xLjUsMy41LTMuNSwzLjUtMy41LTEuNS0zLjUtMy41Wk0zMzUuMzIsMTMwLjk5aDZ2MjVoLTZ2LTI1WiIvPgogICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMzQ2LjA3LDE0My40OWMwLTcuNDUsNS41NS0xMywxMi43NS0xM3MxMi43NSw1LjU1LDEyLjc1LDEzYzAsNy44NS01LjQsMTMtMTIuNzUsMTNzLTEyLjc1LTUuMTUtMTIuNzUtMTNaTTM2NS41NywxNDMuNDljMC00LjUtMi41NS04LTYuNzUtOHMtNi43NSwzLjUtNi43NSw4YzAsNSwyLjUsOCw2Ljc1LDhzNi43NS0zLDYuNzUtOFoiLz4KICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM3Ni4zNiwxMzAuOTloNS43NXYzYzEuMi0xLjgsMy45LTMuNSw3LjUtMy41LDUuOSwwLDkuMjUsMy45NSw5LjI1LDEwdjE1LjVoLTZ2LTE0Ljc1YzAtMy45NS0xLjctNS43NS00Ljc1LTUuNzUtMy44NSwwLTUuNzUsMi41NS01Ljc1LDYuNzV2MTMuNzVoLTZ2LTI1WiIvPgogIDwvZz4KICA8Zz4KICAgIDxwYXRoIGQ9Ik0xMDUuMjksMTM5LjAxYy0xLjkyLTMuMjktNS4xMS01LjUtOC44My02LjI5LTEuNjktNS4yNiwxLjU5LTEwLjUzLDYuODItMTEuNjEsNS4xNC0xLjA3LDEwLjA5LDIuNTUsMTAuNzUsNy43NC42Nyw1LjMxLTMuNCw5Ljk2LTguNzQsMTAuMTYiLz4KICAgIDxwYXRoIGQ9Ik05MS4zNiw5NS43NGMxLjcyLDUuMjYtMS41NywxMC41NC02Ljc5LDExLjYzLTUuMTIsMS4wNy0xMC4wNy0yLjUxLTEwLjc2LTcuNzItLjctNS4zMiwzLjQ3LTEwLjA2LDguNzktMTAuMTYsMS45MywzLjMxLDQuOTgsNS40MSw4Ljc2LDYuMjUiLz4KICAgIDxwYXRoIGQ9Ik03NC4xMywxMjcuMjVjMy44My0uNzksNi45NS0zLjA3LDguODktNi4zMyw1LjM1LjE4LDkuMjUsNC43OSw4Ljc2LDkuOTctLjUsNS4yMS01LjQ4LDguOS0xMC41OCw3Ljk3LTUuMjQtLjk1LTguNjItNi4xNy03LjA2LTExLjYxIi8+CiAgICA8cGF0aCBkPSJNMTEzLjcxLDEwMS4yNGMtMy44Mi43OS02Ljk0LDMuMDctOC44OSw2LjMzLTUuMzgtLjE3LTkuMjktNC44Ny04Ljc1LTEwLC41Ny01LjMyLDUuNTUtOC45NSwxMC43Ny03LjksNS4wOCwxLjAyLDguNDIsNi4xOCw2Ljg3LDExLjU4Ii8+CiAgICA8cGF0aCBkPSJNMTE2LjUyLDEyMy4zYy0yLjEzLTMuMjktNS4xMi01LjU4LTguOS02LjI3LTEuNjktNS4xMSwxLjQ3LTEwLjM4LDYuNS0xMS41OCw1LjE1LTEuMjIsMTAuMiwyLjI1LDExLDcuMzkuODEsNS4yMS0yLjk0LDEwLjEyLTguNiwxMC40NiIvPgogICAgPHBhdGggZD0iTTcxLjMzLDEwNS4xOWMyLjEzLDMuMjgsNS4xMiw1LjU4LDguOSw2LjI2LDEuNjgsNS4xMS0xLjQ3LDEwLjM4LTYuNSwxMS41OC01LjE1LDEuMjMtMTAuMi0yLjI1LTExLTcuMzktLjgxLTUuMjEsMi45NC0xMC4xMiw4LjYtMTAuNDYiLz4KICAgIDxwYXRoIGQ9Ik04NS4zMiwxNDIuOTRjMy43Ni0uNzgsNi44Ny0yLjk3LDguODMtNi4yNyw1LjMyLjEzLDkuMzQsNC44NCw4Ljc1LDEwLjAzLS42LDUuMzQtNS42OCw4Ljk3LTEwLjg5LDcuODQtNS4xNy0xLjEyLTguMzItNi40Ny02LjY5LTExLjU5Ii8+CiAgICA8cGF0aCBkPSJNMTAyLjYxLDg1LjQ0Yy0zLjc4LjkzLTYuOTUsMi45Ni04Ljk2LDYuMzktNS4zNS0uMTYtOS4yNS00LjgxLTguNzItOS45Ni41NC01LjI0LDUuNDQtOC45NCwxMC42NS03Ljk2LDUuMTMuOTYsOC41Myw2LjA0LDcuMDQsMTEuNTMiLz4KICA8L2c+Cjwvc3ZnPg=="
+             alt="Open Science Foundation" width="220" height="100">
+      </a>
     </div>
     <p class="colophon">Open Biocenters. <a href="https://www.gaudi.ch/OpenDrop/">GaudiLabs</a> and <a href="https://radicaldesignstudio.eu">Radical Design Studio</a>, within the <a href="https://opening.science">Open Science Foundation</a> at Etherlaken.</p>
   <p class="license">All content on this page is open: writing, drawings and

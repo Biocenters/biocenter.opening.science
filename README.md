@@ -57,6 +57,22 @@ Live control page: <https://opendrop.151-115-76-163.sslip.io/>
 | [Open Science Foundation](https://opening.science) | Host of the partnership, at Etherlaken |
 | Etherlaken | The site, Interlaken, Switzerland |
 
+## Brand and marks
+
+The five-dot mark and the favicon are this site's own. The Open Science
+Foundation lockup in the footer is reproduced **unmodified** under the
+[OSF Brand Assets Permission](https://github.com/Opening-Science/osf-brand/blob/main/LICENSES/LicenseRef-OSF-Brand-Assets.txt)
+(`LicenseRef-OSF-Brand-Assets`), to identify the host of this partnership. It is
+the base64 of `assets/logo/OSF_positive_original.svg` from
+[osf-brand](https://github.com/Opening-Science/osf-brand), sha256
+`6a2813ca…e86d5f8a`, byte-identical to that repository's manifest.
+
+That permission is limited and not an open licence. Under it: do not recolour,
+crop, distort, redraw or recombine the lockup, and do not present it as this
+site's own identity. It stays a footer credit; the header mark is ours. Nothing
+here is a claim of endorsement beyond the hosting relationship OSF actually has,
+and no trademark registration is asserted.
+
 ## Licences
 
 Writing, drawings and photographs are under
