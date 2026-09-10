@@ -819,6 +819,17 @@ body.is-editing #ed-open { visibility: hidden; }
             <path class="hero-bolt" opacity="0"></path>
             <path class="hero-bolt" opacity="0"></path>
             <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
+            <path class="hero-bolt" opacity="0"></path>
         </svg></div>
         </figure>
       </div>
@@ -1312,7 +1323,7 @@ body.is-editing #ed-open { visibility: hidden; }
     });
     var keyKey = keyOf(+key.getAttribute('cx'), +key.getAttribute('cy'));
     var allKeys = Object.keys(adj);
-    var LIFE = 0.62, STEP = 0.055, MAX = 9;
+    var LIFE = 0.62, STEP = 0.055, MAX = 14;
     var bolts = [], nextSpawn = 0;
 
     function jitPath(A, B, jit, amp) {
@@ -1345,7 +1356,7 @@ body.is-editing #ed-open { visibility: hidden; }
       var i, si;
       if (t > nextSpawn) {
         if (bolts.length < MAX) { spawn(t); }
-        nextSpawn = t + 0.18 + Math.random() * 0.32;
+        nextSpawn = t + 0.06 + Math.random() * 0.14;
       }
       for (i = bolts.length - 1; i >= 0; i--) {
         if (t - bolts[i].born > LIFE + bolts[i].path.length * STEP) { bolts.splice(i, 1); }
