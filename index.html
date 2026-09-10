@@ -1239,8 +1239,56 @@ window.addEventListener('DOMContentLoaded', function () {
     };
   }
 
+  /* Isometric offset for a point z units above the page, relative to
+     whatever center the caller is drawing around. A light, fixed 2:1 tilt,
+     not a full 3D camera: enough to lift the diagrams off the page on
+     hover without turning them into something that needs to be orbited. */
+  function isoOff(dx, dy, z) {
+    return { x: (dx - dy) * 0.87, y: (dx + dy) * 0.5 - z };
+  }
+
+  /* Cursor-driven explosion, shared by all three sketches: every node keeps
+     a spring-loaded displacement that flees the pointer when it gets close
+     and relaxes back to zero the instant it does not. Same idea Zach
+     Lieberman's and Golan Levin's toys run on, kept to arithmetic simple
+     enough to stay legible at a glance. */
+  function makeExploder(p, radius, strength) {
+    return function (node, dt, mx, my, active) {
+      var dx = node.hx - mx, dy = node.hy - my;
+      var dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
+      var ax = 0, ay = 0, az = 0;
+      if (active && dist < radius) {
+        var f = (1 - dist / radius); f *= f;
+        ax = (dx / dist) * f * strength;
+        ay = (dy / dist) * f * strength;
+        az = f * strength * 0.55;
+      }
+      ax += -node.ex * 46; ay += -node.ey * 46; az += -node.ez * 46;
+      node.vx = (node.vx + ax * dt) * 0.86;
+      node.vy = (node.vy + ay * dt) * 0.86;
+      node.vz = (node.vz + az * dt) * 0.86;
+      node.ex += node.vx * dt; node.ey += node.vy * dt; node.ez += node.vz * dt;
+    };
+  }
+
   function common(p, host, logicalW, logicalH, drawFn) {
     makeBase(logicalW, logicalH)(p, host);
+
+    p.hoverOn = false;
+    p.hx = -9999; p.hy = -9999;
+
+    function trackHover(e) {
+      var r = p.canvas.getBoundingClientRect();
+      var cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+      var cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+      p.hx = cx / p.k; p.hy = cy / p.k;
+      p.hoverOn = true;
+      if (STILL) { p.redraw(); }
+    }
+    function clearHover() {
+      p.hoverOn = false;
+      if (STILL) { p.redraw(); }
+    }
 
     p.setup = function () {
       var s = p.fit();
@@ -1249,6 +1297,10 @@ window.addEventListener('DOMContentLoaded', function () {
       p.pixelDensity(Math.min(2, window.devicePixelRatio || 1));
       p.textFont(MONO);
       p.strokeJoin(p.ROUND);
+      c.canvas.addEventListener('pointermove', trackHover);
+      c.canvas.addEventListener('pointerleave', clearHover);
+      c.canvas.addEventListener('touchmove', trackHover, { passive: true });
+      c.canvas.addEventListener('touchend', clearHover);
       if (STILL) { p.noLoop(); }
     };
 
@@ -1290,231 +1342,289 @@ window.addEventListener('DOMContentLoaded', function () {
     p.pop();
   }
 
-  /* --- 1. Hero: the field -----------------------------------------------
-     Fifty-four slots sit in a medium, and the medium is drawn. Filaments
-     stream through the canvas along a slowly turning noise field; every slot
-     bends the filaments passing near it, the way iron filings bend around a
-     magnet, so the machines are visible in the drawing even where no dot is.
+  /* --- 1. Hero dot field ------------------------------------------------
+     Fifty-four dots on a phyllotaxis spiral, one per machine slot. Each one
+     drifts inside a small radius on its own noise field, so the field
+     breathes without any dot ever leaving its slot. The filled dot is the
+     one unit that runs. */
+  /* --- 1. Hero dot field ------------------------------------------------
+     Fifty-four dots on a phyllotaxis spiral, one per machine slot, laid out
+     in a light isometric relief so the field reads as a raised surface
+     rather than flat paper. Each one drifts inside a small radius on its
+     own noise field, so the field breathes without any dot ever leaving its
+     slot. The filled dot is the one unit that runs.
 
-     The one running unit emits wavefronts. Each front travels outward, pushes
-     the filaments aside as it crosses them, and wakes the slots it reaches in
-     order of distance. The propagation is what makes the piece readable: a
-     single machine acting, and the effect arriving everywhere in turn.
-
-     The slot influence is baked into a coarse grid once, so the per-frame
-     cost is one noise lookup per filament step and nothing else. */
+     Hovering scatters whatever is nearby: every dot carries a small spring
+     that flees the pointer and pops upward in the isometric relief, then
+     relaxes back the instant the pointer moves on. */
   function heroSketch(host) {
     return function (p) {
-      var N = 54, KEY = 12, R = 250, CX = 268, CY = 268, W = 536;
+      var N = 54, KEY = 12, R = 250, CX = 268, CY = 268;
       var GA = Math.PI * (3 - Math.sqrt(5));
-      var GN = 44, GS = W / GN;          /* influence grid */
-      var STEPS = 22, LEN = 11;
-      var PERIOD = 5.2;                  /* seconds between wavefronts */
-      var SPEED = 168;                   /* wavefront travel, units per second */
-      var slots = [], grid = new Float32Array(GN * GN), starts = [];
-      var i, j;
+      var K = 2;                 /* nearest neighbours wired per slot */
+      var LIFE = 0.62;           /* seconds a bolt stays lit */
+      var STEP = 0.055;          /* seconds before the next hop lights */
+      var MAX = 9;
+      var dots = [], edges = [], adj = [], bolts = [], nextSpawn = 0;
+      var explode = makeExploder(p, 92, 210);
 
+      var i, j;
       for (i = 0; i < N; i++) {
         var r = R * Math.sqrt((i + 0.5) / N), a = i * GA;
-        slots.push({
-          x: CX + r * Math.cos(a), y: CY + r * Math.sin(a),
-          key: i === KEY, d: 0, ex: 0, seed: i * 37.7
+        dots.push({
+          hx: CX + r * Math.cos(a),
+          hy: CY + r * Math.sin(a),
+          x: 0, y: 0, sx: 0, sy: 0,
+          ex: 0, ey: 0, ez: 0, vx: 0, vy: 0, vz: 0,
+          zBase: 3 + 7 * ((i * 53) % 11) / 10,
+          key: i === KEY,
+          seed: i * 37.7
         });
+        adj.push([]);
       }
+
+      /* The graph is built once from the home positions, so the wiring does
+         not rearrange itself while the field drifts. */
+      var seen = {};
       for (i = 0; i < N; i++) {
-        var dx = slots[i].x - slots[KEY].x, dy = slots[i].y - slots[KEY].y;
-        slots[i].d = Math.sqrt(dx * dx + dy * dy);
-      }
-
-      /* Each slot spins the medium around itself. Baked once: the geometry
-         never changes, only what runs through it. */
-      for (var gy = 0; gy < GN; gy++) {
-        for (var gx = 0; gx < GN; gx++) {
-          var px = (gx + 0.5) * GS, py = (gy + 0.5) * GS, ax = 0, ay = 0;
-          for (i = 0; i < N; i++) {
-            var vx = px - slots[i].x, vy = py - slots[i].y;
-            var d2 = vx * vx + vy * vy;
-            if (d2 > 9000 || d2 < 1) { continue; }
-            var w = 1 / d2;
-            ax += -vy * w; ay += vx * w;          /* tangential, a vortex */
-          }
-          grid[gy * GN + gx] = Math.atan2(ay, ax);
+        var near = [];
+        for (j = 0; j < N; j++) {
+          if (j === i) { continue; }
+          var dx = dots[i].hx - dots[j].hx, dy = dots[i].hy - dots[j].hy;
+          near.push({ j: j, d: dx * dx + dy * dy });
+        }
+        near.sort(function (u, v) { return u.d - v.d; });
+        for (j = 0; j < K; j++) {
+          var lo = Math.min(i, near[j].j), hi = Math.max(i, near[j].j);
+          var key = lo + '-' + hi;
+          if (seen[key]) { continue; }
+          seen[key] = 1;
+          edges.push([lo, hi]);
+          adj[lo].push(hi);
+          adj[hi].push(lo);
         }
       }
-      function influence(x, y) {
-        var gx = x / GS | 0, gy = y / GS | 0;
-        if (gx < 0 || gy < 0 || gx >= GN || gy >= GN) { return 0; }
-        return grid[gy * GN + gx];
-      }
 
-      /* Filaments start on a jittered grid over the whole canvas, so the
-         medium has texture everywhere rather than only at the rim. */
-      var SIDE = 15, LINES = SIDE * SIDE;
-      for (i = 0; i < SIDE; i++) {
-        for (j = 0; j < SIDE; j++) {
-          starts.push({
-            x: 26 + (i + 0.5) * ((W - 52) / SIDE) + (((i * 7 + j * 13) % 11) - 5) * 3.1,
-            y: 26 + (j + 0.5) * ((W - 52) / SIDE) + (((i * 5 + j * 17) % 11) - 5) * 3.1,
-            o: (i * SIDE + j) * 0.29
+      /* A bolt is a short random walk over the wiring. Two in five start at
+         the one running unit, so the field reads as a network with one live
+         machine on it. */
+      function spawn(p, t) {
+        var from = (p.random() < 0.4) ? KEY : Math.floor(p.random(N));
+        var path = [from], jit = [], hops = 2 + Math.floor(p.random(3));
+        for (var h = 0; h < hops; h++) {
+          var opts = adj[path[path.length - 1]].filter(function (n) {
+            return path.indexOf(n) === -1;
           });
+          if (!opts.length) { break; }
+          path.push(opts[Math.floor(p.random(opts.length))]);
+          jit.push([p.random(-1, 1), p.random(-1, 1), p.random(-1, 1)]);
         }
+        if (path.length < 2) { return; }
+        bolts.push({ path: path, jit: jit, born: t, key: from === KEY });
       }
 
-      common(p, host, W, W, function (p, t) {
-        var i, k;
-        var lines = p.narrow ? 100 : LINES;
-        var front = ((t % PERIOD) / PERIOD) * PERIOD * SPEED;   /* current radius */
-        var prevFront = front - SPEED * 0.0;
+      function bolt(p, x0, y0, x1, y1, jit, amp) {
+        var dx = x1 - x0, dy = y1 - y0;
+        var len = Math.sqrt(dx * dx + dy * dy) || 1;
+        var nx = -dy / len, ny = dx / len;
+        p.beginShape();
+        p.vertex(x0, y0);
+        for (var k = 1; k <= 3; k++) {
+          var f = k / 4;
+          var o = jit[k - 1] * amp * Math.sin(f * Math.PI);
+          p.vertex(x0 + dx * f + nx * o, y0 + dy * f + ny * o);
+        }
+        p.vertex(x1, y1);
+        p.endShape();
+      }
 
-        /* the medium */
+      common(p, host, 536, 536, function (p, t) {
+        var i, e, b, si;
+        var dt = Math.min(0.05, (p.deltaTime || 16) / 1000);
+
+        /* drift, explosion physics, then the isometric projection that
+           turns (drifted position, elevation) into what is actually drawn */
+        for (i = 0; i < N; i++) {
+          var d = dots[i];
+          d.x = d.hx + (p.noise(d.seed, t * 0.14) - 0.5) * 26;
+          d.y = d.hy + (p.noise(d.seed + 91.3, t * 0.14) - 0.5) * 26;
+          explode(d, dt, p.hx, p.hy, p.hoverOn);
+          var off = isoOff(d.x - CX + d.ex, d.y - CY + d.ey, d.zBase + d.ez);
+          d.sx = CX + off.x; d.sy = CY + off.y;
+        }
+
+        /* the wiring, barely there until something runs on it */
         p.noFill();
-        p.strokeCap(p.ROUND);
-        for (i = 0; i < lines; i++) {
-          var s = starts[i % LINES];
-          var x = s.x, y = s.y, px, py;
-          /* Drawn one segment at a time: a p5 shape takes a single stroke
-             style at endShape, so a filament that fades along its length has
-             to be laid down segment by segment. */
-          for (k = 0; k < STEPS; k++) {
-            px = x; py = y;
-            /* Perlin noise clusters around 0.5, so mapping it straight onto a
-               full turn sends every filament the same way. Centring first,
-               then amplifying, keeps the field smooth and lets it cover every
-               direction. */
-            var ang = (p.noise(x * 0.0026, y * 0.0026, t * 0.05) - 0.5) * Math.PI * 3
-                    + influence(x, y) * 0.5;
-            /* the wavefront shoulders the medium aside as it passes */
-            var wx = x - slots[KEY].x, wy = y - slots[KEY].y;
-            var wd = Math.sqrt(wx * wx + wy * wy) || 1;
-            var band = Math.abs(wd - front);
-            var push = band < 46 ? (1 - band / 46) * 9 : 0;
-            x += Math.cos(ang) * LEN + (wx / wd) * push;
-            y += Math.sin(ang) * LEN + (wy / wd) * push;
-            var fade = 0.35 + 0.65 * (1 - k / STEPS);
-            p.stroke(p.color(push > 2 ? C.mark : C.haze));
-            p.strokeWeight(push > 2 ? 1.7 : 1.0);
-            p.drawingContext.globalAlpha = (push > 2 ? 0.6 : 0.34) * fade;
-            p.line(px, py, x, y);
-          }
+        p.stroke(p.color(C.haze));
+        p.strokeWeight(1);
+        p.drawingContext.globalAlpha = 0.22;
+        for (i = 0; i < edges.length; i++) {
+          e = edges[i];
+          p.line(dots[e[0]].sx, dots[e[0]].sy, dots[e[1]].sx, dots[e[1]].sy);
         }
         p.drawingContext.globalAlpha = 1;
 
-        /* the wavefront itself, and the slots it has just reached */
+        /* bolts */
         if (!STILL) {
-          p.noFill();
-          p.stroke(p.color(C.mark));
-          p.strokeWeight(1.4);
-          p.drawingContext.globalAlpha = Math.max(0, 1 - front / (R * 1.5)) * 0.55;
-          p.circle(slots[KEY].x, slots[KEY].y, front * 2);
-          p.drawingContext.globalAlpha = 1;
-          for (i = 0; i < N; i++) {
-            var b = Math.abs(slots[i].d - front);
-            slots[i].ex = b < 40 ? 1 - b / 40 : slots[i].ex * 0.9;
+          if (t > nextSpawn) {
+            if (bolts.length < MAX) { spawn(p, t); }
+            nextSpawn = t + p.random(0.18, 0.5);
           }
+          for (i = bolts.length - 1; i >= 0; i--) {
+            if (t - bolts[i].born > LIFE + bolts[i].path.length * STEP) {
+              bolts.splice(i, 1);
+            }
+          }
+          p.noFill();
+          p.strokeCap(p.ROUND);
+          for (i = 0; i < bolts.length; i++) {
+            b = bolts[i];
+            var age = t - b.born;
+            for (si = 0; si < b.path.length - 1; si++) {
+              var lit = age - si * STEP;
+              if (lit < 0) { break; }
+              var f = 1 - lit / LIFE;
+              if (f <= 0) { continue; }
+              var A = dots[b.path[si]], B = dots[b.path[si + 1]];
+              p.stroke(p.color(b.key ? C.mark : C.ink));
+              p.strokeWeight(f > 0.85 ? 2.2 : 1.4);
+              p.drawingContext.globalAlpha = Math.pow(f, 1.6);
+              bolt(p, A.sx, A.sy, B.sx, B.sy, b.jit[si], 11);
+            }
+          }
+          p.drawingContext.globalAlpha = 1;
         }
 
-        /* the slots */
+        /* slots: a stem to the ground plane sells the lift when a dot pops
+           up under the pointer, then the disc itself */
         p.noStroke();
         for (i = 0; i < N; i++) {
-          var q = slots[i];
+          var q = dots[i];
+          var lifted = q.zBase + q.ez;
+          if (lifted > 1.2) {
+            var groundOff = isoOff(q.x - CX + q.ex, q.y - CY + q.ey, 0);
+            p.stroke(p.color(C.haze));
+            p.strokeWeight(1);
+            p.drawingContext.globalAlpha = 0.4;
+            p.line(q.sx, q.sy, CX + groundOff.x, CY + groundOff.y);
+            p.drawingContext.globalAlpha = 1;
+            p.noStroke();
+          }
           if (q.key) {
-            var beat = 0.5 + 0.5 * Math.sin(t * 1.5);
+            var pulse = 0.5 + 0.5 * Math.sin(t * 1.6);
             p.noFill();
             p.stroke(p.color(C.mark));
             p.strokeWeight(1.2);
-            p.circle(q.x, q.y, 32 + beat * 14);
+            p.circle(q.sx, q.sy, 30 + pulse * 16);
             p.noStroke();
             p.fill(p.color(C.mark));
-            p.circle(q.x, q.y, 25);
+            p.circle(q.sx, q.sy, 24);
           } else {
-            var e = q.ex * q.ex;
-            var own = 1 + 0.12 * Math.sin(t * 0.8 + q.seed);
-            p.fill(p.color(C.ink));
-            p.circle(q.x, q.y, (13 + e * 13) * own);
-            if (e > 0.05) {
-              p.noFill();
-              p.stroke(p.color(C.mark));
-              p.strokeWeight(1);
-              p.drawingContext.globalAlpha = e * 0.8;
-              p.circle(q.x, q.y, 26 + (1 - e) * 26);
-              p.drawingContext.globalAlpha = 1;
-              p.noStroke();
-            }
+            var pop = p.constrain(q.ez / 40, 0, 1);
+            p.fill(p.color(pop > 0.15 ? C.mark : C.ink));
+            p.circle(q.sx, q.sy, 15 + pop * 10);
           }
         }
       });
     };
   }
 
-  /* --- 2. Plan of one floor: growth --------------------------------------
-     The drawing is the same floor as before, but it is no longer a snapshot.
-     The room fills. Bays come online one at a time, nearest the goods door
-     first, and for each one the service spine lights from the door to that
-     column before the branch rises and the bay settles in. Then the floor
-     empties and the cycle starts again.
+  /* --- 2. Plan of one floor ---------------------------------------------
+     The static plan, plus one signal running the service corridor. Each
+     time the signal passes under the installed unit it branches up into
+     the slot, which brightens and settles. That is the network reaching
+     the one machine that answers.
 
-     What the section claims in words, that capacity grows by adding slots,
-     the drawing does. Nothing is decorative: every moving part corresponds to
-     something that has to happen for a machine to come online. */
+     Every bay now stands as a small isometric block above its footprint on
+     the floor, the installed one taller and lit. Hovering lifts whichever
+     block is under the pointer and throws a short burst of sparks off it,
+     the same explosive pop as the hero field, scoped to one machine at a
+     time so the architecture underneath stays legible. */
   function planSketch(host) {
     return function (p) {
       var COLS = [48, 126, 204, 282, 360, 438, 516, 594, 672];
       var TOP = [128, 164, 200], BOT = [330, 366, 402];
       var CW = 56, CH = 30;
       var KEYX = 204, KEYY = 128;
-      var CORR_Y = 274, WALL = { x: 20, y: 84, w: 720, h: 380 };
-      var DOOR = { x: WALL.x, y: 274 };
-      var FILL = 21.0, HOLD = 3.0, CLEAR = 3.0;
-      var PERIOD = FILL + HOLD + CLEAR;
-      var LEAD = 0.55;              /* seconds the spine leads the bay */
-      var bays = [], r, c;
+      var CORR_Y = 274, BRANCH_X = KEYX + CW / 2;
+      var WALL = { x: 20, y: 84, w: 720, h: 380 };
+      var PERIOD = 7.0;
+      var HOVER_R = 46;
+      var bays = [], sparks = [];
 
+      function addBay(x, y, filled) {
+        bays.push({ x: x, y: y, filled: filled, ez: 0, vz: 0, hover: 0 });
+      }
+      var r, c;
       for (r = 0; r < TOP.length; r++) {
         for (c = 0; c < COLS.length; c++) {
           if (COLS[c] === KEYX && TOP[r] === KEYY) { continue; }
-          bays.push({ x: COLS[c], y: TOP[r] });
+          addBay(COLS[c], TOP[r], false);
         }
       }
       for (r = 0; r < BOT.length; r++) {
-        for (c = 0; c < COLS.length; c++) { bays.push({ x: COLS[c], y: BOT[r] }); }
+        for (c = 0; c < COLS.length; c++) { addBay(COLS[c], BOT[r], false); }
       }
-      /* Order of arrival: whatever is easiest to reach from the goods door. */
-      for (var i = 0; i < bays.length; i++) {
-        var b = bays[i];
-        b.cx = b.x + CW / 2;
-        b.d = Math.abs(b.cx - DOOR.x) + Math.abs(b.y + CH / 2 - DOOR.y) * 1.4;
-      }
-      bays.sort(function (u, v) { return u.d - v.d; });
-      for (i = 0; i < bays.length; i++) { bays[i].on = (i / bays.length) * FILL; }
+      var keyBay = { x: KEYX, y: KEYY, filled: true, ez: 0, vz: 0, hover: 0 };
+      bays.push(keyBay);
 
-      /* One bay: the outline, the service rail it hangs on, and the two
-         connections every machine in the room makes, power and network. */
-      function bay(p, x, y, filled) {
-        if (!filled) {
-          p.noFill();
-          p.stroke(p.color(C.haze));
-          p.strokeWeight(1);
-          p.rect(x, y, CW, CH);
-        }
-        p.stroke(p.color(filled ? C.paper : C.haze));
+      /* One bay drawn as a small isometric block: a base outline exactly
+         where the old flat rectangle sat, so the corridor and branch wiring
+         below still line up pixel for pixel, and a lifted, skewed cap above
+         it standing in for height. */
+      function bay(p, b) {
+        var x = b.x, y = b.y;
+        /* A gentler skew than the hero field's: at full hover lift this
+           still has to fit inside the 22px gap between columns, or a raised
+           bay would visually collide with its neighbour. */
+        var elev = 5 + b.ez + (b.filled ? 6 : 0);
+        var off = { x: elev * 0.5, y: -elev * 0.32 };
+        var topCol = b.filled ? C.mark : (b.hover > 0.1 ? C.ink : C.haze);
+        var fillTop = b.filled || b.hover > 0.4;
+
+        /* base footprint, always present, exactly as before */
+        p.noFill();
+        p.stroke(p.color(C.haze));
         p.strokeWeight(1);
-        p.line(x + 7, y + 5, x + 7, y + CH - 5);
-        p.noStroke();
-        p.fill(p.color(filled ? C.paper : C.haze));
-        p.rect(x + 45, y + 8, 4, 4);
-        p.rect(x + 45, y + 18, 4, 4);
-      }
+        p.rect(x, y, CW, CH);
 
-      function ease(u) { return u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u); }
+        /* side faces, shaded a step darker than the top */
+        p.noStroke();
+        p.fill(p.color(C.haze));
+        p.drawingContext.globalAlpha = 0.55;
+        p.quad(x + CW, y, x + CW, y + CH, x + CW + off.x, y + CH + off.y, x + CW + off.x, y + off.y);
+        p.quad(x, y + CH, x + CW, y + CH, x + CW + off.x, y + CH + off.y, x + off.x, y + CH + off.y);
+        p.drawingContext.globalAlpha = 1;
+
+        /* top cap */
+        p.stroke(p.color(topCol));
+        p.strokeWeight(1);
+        if (fillTop) { p.fill(p.color(topCol)); } else { p.noFill(); }
+        p.rect(x + off.x, y + off.y, CW, CH);
+
+        /* the two connections every machine makes, power and network */
+        p.stroke(p.color(fillTop ? C.paper : C.haze));
+        p.strokeWeight(1);
+        p.line(x + off.x + 7, y + off.y + 5, x + off.x + 7, y + off.y + CH - 5);
+        p.noStroke();
+        p.fill(p.color(fillTop ? C.paper : C.haze));
+        p.rect(x + off.x + 45, y + off.y + 8, 4, 4);
+        p.rect(x + off.x + 45, y + off.y + 18, 4, 4);
+      }
 
       common(p, host, 760, 540, function (p, t) {
-        var i, c, cx, b;
-        var ph = STILL ? FILL * 0.62 : (t % PERIOD);
-        var clearing = ph > FILL + HOLD ? (ph - FILL - HOLD) / CLEAR : 0;
+        var phase = (t % PERIOD) / PERIOD;
+        var sigX = p.lerp(WALL.x, WALL.x + WALL.w, phase);
+        var hitPhase = (BRANCH_X - WALL.x) / WALL.w;
+        var since = phase - hitPhase;
+        if (since < 0) { since += 1; }
+        var since_s = since * PERIOD;
+        var cx, i;
+        var dt = Math.min(0.05, (p.deltaTime || 16) / 1000);
 
         if (!p.narrow) { label(p, 'plan of one floor', 20, 28, p.detail, C.gray); }
 
-        /* callout to the unit that is already there */
+        /* callout to the one installed unit */
         label(p, 'OpenDrop BioServer', 406, 62, p.body, C.ink);
         p.stroke(p.color(C.haze));
         p.strokeWeight(1);
@@ -1535,10 +1645,67 @@ window.addEventListener('DOMContentLoaded', function () {
         p.strokeWeight(1);
         p.line(WALL.x - 5, 252, WALL.x + 5, 252);
         p.line(WALL.x - 5, 296, WALL.x + 5, 296);
-        if (!p.narrow) { label(p, 'goods in', 28, 246, p.detail, C.gray, p.LEFT); }
+        if (!p.narrow) {
+          label(p, 'goods in', 28, 246, p.detail, C.gray, p.LEFT);
+        }
 
-        /* empty bays first, so filled ones sit on top of the grid */
-        for (i = 0; i < bays.length; i++) { bay(p, bays[i].x, bays[i].y, false); }
+        /* every bay: hover physics first */
+        var lifted = null, liftedZ = -1;
+        for (i = 0; i < bays.length; i++) {
+          var b = bays[i];
+          var bx = b.x + CW / 2, by = b.y + CH / 2;
+          var dx = bx - p.hx, dy = by - p.hy;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          var target = (p.hoverOn && dist < HOVER_R) ? (1 - dist / HOVER_R) : 0;
+          var wasLow = b.hover < 0.35;
+          b.hover = p.lerp(b.hover, target, 1 - Math.pow(0.001, dt));
+          var az = (target * 15 - b.ez) * 60 - b.vz * 9;
+          b.vz = (b.vz + az * dt) * 0.9;
+          b.ez += b.vz * dt;
+          if (wasLow && b.hover > 0.35 && !STILL) {
+            for (var s = 0; s < 7; s++) {
+              sparks.push({
+                x: bx, y: by, born: t,
+                a: (s / 7) * Math.PI * 2 + p.random(-0.3, 0.3),
+                sp: p.random(38, 78), key: b.filled
+              });
+            }
+          }
+        }
+        /* drawn in rising order of height, so a lifted bay's cap and cables
+           are never cut off by a taller neighbour drawn afterwards */
+        var order = bays.slice().sort(function (u, v) { return u.ez - v.ez; });
+        for (i = 0; i < order.length; i++) {
+          if (order[i] !== keyBay) { bay(p, order[i]); }
+        }
+
+        /* the one installed unit, brightening as the signal reaches it, on
+           top of everything else so its block never sits behind a neighbour */
+        var glow = Math.exp(-since_s * 1.5);
+        bay(p, keyBay);
+        if (glow > 0.01) {
+          var koff = { x: (5 + keyBay.ez + 6) * 0.5, y: -(5 + keyBay.ez + 6) * 0.32 };
+          p.noStroke();
+          p.fill(255, 255, 255, 150 * glow);
+          p.rect(KEYX + koff.x, KEYY + koff.y, CW, CH);
+        }
+
+        /* sparks: a short outward flick that fades, drawn above the bays */
+        if (!STILL) {
+          p.noStroke();
+          for (i = sparks.length - 1; i >= 0; i--) {
+            var sp2 = sparks[i];
+            var age = t - sp2.born;
+            if (age > 0.42) { sparks.splice(i, 1); continue; }
+            var f = 1 - age / 0.42;
+            var sx = sp2.x + Math.cos(sp2.a) * sp2.sp * age;
+            var sy = sp2.y + Math.sin(sp2.a) * sp2.sp * age - 30 * age;
+            p.fill(p.color(sp2.key ? C.mark : C.ink));
+            p.drawingContext.globalAlpha = f * f;
+            p.circle(sx, sy, 3.2 * f);
+          }
+          p.drawingContext.globalAlpha = 1;
+        }
 
         if (!p.narrow) {
           for (c = 0; c < COLS.length; c++) {
@@ -1570,65 +1737,25 @@ window.addEventListener('DOMContentLoaded', function () {
                 380, 314, p.detail, C.gray, p.CENTER);
         }
 
-        /* the unit that was already installed, always there */
+        /* the signal running the spine */
         p.noStroke();
-        p.fill(p.color(C.mark));
-        p.rect(KEYX, KEYY, CW, CH);
-        bay(p, KEYX, KEYY, true);
+        var g;
+        for (g = 6; g >= 0; g--) {
+          var tx = sigX - g * 9;
+          if (tx < WALL.x) { continue; }
+          p.fill(p.color(C.mark));
+          p.drawingContext.globalAlpha = (1 - g / 7) * 0.85;
+          p.circle(tx, CORR_Y, 7);
+        }
+        p.drawingContext.globalAlpha = 1;
 
-        /* the floor filling, one bay at a time */
-        for (i = 0; i < bays.length; i++) {
-          b = bays[i];
-          var u = ease((ph - b.on) / 0.5);
-          if (clearing > 0) { u *= 1 - ease(clearing); }
-          if (u <= 0.01) { continue; }
-          p.noStroke();
-          p.fill(p.color(C.ink));
-          p.drawingContext.globalAlpha = u;
-          p.rect(b.x, b.y, CW, CH);
+        if (since_s < 0.9) {
+          var rise = Math.min(1, since_s / 0.45);
+          p.stroke(p.color(C.mark));
+          p.strokeWeight(2);
+          p.drawingContext.globalAlpha = 1 - Math.max(0, (since_s - 0.45) / 0.45);
+          p.line(BRANCH_X, CORR_Y, BRANCH_X, p.lerp(CORR_Y, KEYY + CH, rise));
           p.drawingContext.globalAlpha = 1;
-          bay(p, b.x, b.y, true);
-
-          /* the run that brought it online, fading once it is settled */
-          var lead = 1 - ease((ph - b.on + LEAD) / (LEAD * 2.2));
-          if (lead > 0.02 && clearing === 0) {
-            p.stroke(p.color(C.mark));
-            p.strokeWeight(2);
-            p.drawingContext.globalAlpha = lead;
-            p.noFill();
-            p.line(DOOR.x + 8, CORR_Y, b.cx, CORR_Y);
-            p.line(b.cx, CORR_Y, b.cx, b.y + (b.y < CORR_Y ? CH : 0));
-            p.drawingContext.globalAlpha = 1;
-          }
-        }
-
-        /* the head of the run, travelling the spine towards the next bay */
-        if (!STILL && clearing === 0) {
-          for (i = 0; i < bays.length; i++) {
-            b = bays[i];
-            var s = (ph - b.on + LEAD) / LEAD;
-            if (s < 0 || s > 1) { continue; }
-            var hx = p.lerp(DOOR.x + 8, b.cx, ease(s));
-            p.noStroke();
-            for (var g = 5; g >= 0; g--) {
-              var gx = hx - g * 8;
-              if (gx < DOOR.x) { continue; }
-              p.fill(p.color(C.mark));
-              p.drawingContext.globalAlpha = (1 - g / 6) * 0.85;
-              p.circle(gx, CORR_Y, 7);
-            }
-            p.drawingContext.globalAlpha = 1;
-          }
-        }
-
-        /* a running count, so the growth is legible as a number too */
-        var live = 1;
-        for (i = 0; i < bays.length; i++) {
-          if (ease((ph - bays[i].on) / 0.5) > 0.5 && clearing < 0.5) { live++; }
-        }
-        if (!p.narrow) {
-          label(p, live + ' of ' + (bays.length + 1) + ' bays filled',
-                732, 28, p.detail, C.gray, p.RIGHT);
         }
 
         /* scale: the drawing's unit is one bay */
@@ -1642,22 +1769,20 @@ window.addEventListener('DOMContentLoaded', function () {
     };
   }
 
-  /* --- 3. The remote experimentation loop: exchange -----------------------
-     One command going round told the shape of the loop but not its life. The
-     ring now carries a stream: several exchanges in flight at once, each a
-     head with a trail that fades behind it along the arc.
+  /* --- 3. The remote experimentation loop -------------------------------
+     One command runs the ring and comes back as an observation. The token
+     is the thing being passed: it leaves the team, and the loop is only
+     closed when it arrives back at the team along the return path, which
+     is why that segment is the one drawn in full weight.
 
-     Direction is readable by colour and weight. A command leaves the team in
-     the accent and thins as it goes; past observation it becomes an answer,
-     drawn in ink and heavier, which is why the return path was already the
-     heavy one in the static drawing.
-
-     The AI layer is where the change happens, so a token slows there and the
-     node answers. Every node brightens as something passes through it, and
-     dims once it has. */
+     The ring itself is squashed into an isometric ellipse, the standard way
+     a circle on a ground plane reads in that projection, so the loop sits
+     like a track rather than a flat badge. Hovering a node lifts it off the
+     track on a short pedestal and throws a burst of sparks, the same
+     explosive pop used across the other two drawings. */
   function loopSketch(host) {
     return function (p) {
-      var CX = 380, CY = 250, R = 150;
+      var CX = 380, CY = 250, R = 150, SQ = 0.55;
       /* The AI layer sits between observation and the team: it is what turns
          what the camera saw into something the team can act on, so it belongs
          on the return path rather than on the way out. */
@@ -1669,115 +1794,128 @@ window.addEventListener('DOMContentLoaded', function () {
         { th: 240, t1: 'observation', t2: 'sensors, camera', ax: 'right', dy: 0 },
         { th: 300, t1: 'AI layer',    t2: 'vision, world models', ax: 'right', dy: 0, key: true }
       ];
-      var PERIOD = 13.0;
-      var TOKENS = 5;
-      var TRAIL = 14;
+      var PERIOD = 9.0, HOVER_R = 40;
+      var sparks = [];
+
+      for (var ni = 0; ni < NODES.length; ni++) {
+        NODES[ni].ez = 0; NODES[ni].vz = 0; NODES[ni].hover = 0;
+      }
 
       function pt(deg, rad) {
         var a = p.radians(deg);
-        return { x: CX + (rad || R) * Math.sin(a), y: CY - (rad || R) * Math.cos(a) };
-      }
-
-      /* Progress is not linear: a token lingers where the work happens, at the
-         machines and at the AI layer, and moves briskly over the wire. */
-      function eased(u) {
-        var d = u - Math.floor(u);
-        return Math.floor(u) + (d - 0.11 * Math.sin(d * Math.PI * 4) / (Math.PI * 4) * 4);
+        return { x: CX + (rad || R) * Math.sin(a), y: CY - (rad || R) * Math.cos(a) * SQ };
       }
 
       common(p, host, 760, 500, function (p, t) {
-        var i, q, seg, n;
-        var ex = [0, 0, 0, 0, 0, 0];
+        var i, b, seg, q;
+        var dt = Math.min(0.05, (p.deltaTime || 16) / 1000);
 
-        /* where every token is, before anything is drawn */
-        var pos = [];
-        for (i = 0; i < TOKENS; i++) {
-          var u = ((STILL ? 0.32 : t / PERIOD) + i / TOKENS) % 1;
-          pos.push(eased(u * 6) / 6);       /* 6 arcs, eased within each */
-        }
-
-        /* nodes light as something passes through them */
-        for (i = 0; i < TOKENS; i++) {
-          for (n = 0; n < 6; n++) {
-            var dd = Math.abs(pos[i] - n / 6);
-            if (dd > 0.5) { dd = 1 - dd; }
-            if (dd < 0.055) { ex[n] = Math.max(ex[n], 1 - dd / 0.055); }
-          }
-        }
-
-        /* the six arcs, with the return path in full weight */
+        /* forward arcs with their arrowheads, then the return arc heavier */
         for (i = 0; i < 6; i++) {
           var from = i * 60 + 10, to = i * 60 + 50;
-          var isReturn = (i >= 4);
+          var isReturn = (i >= 4);   /* observation -> AI layer -> team */
           p.noFill();
           p.stroke(p.color(isReturn ? C.ink : C.haze));
           p.strokeWeight(isReturn ? 2 : 1);
           p.beginShape();
           for (q = 0; q <= 24; q++) {
-            var s = pt(p.lerp(from, to, q / 24));
+            var d = p.lerp(from, to, q / 24);
+            var s = pt(d);
             p.vertex(s.x, s.y);
           }
           p.endShape();
-          var end = pt(to);
-          arrowHead(p, end.x, end.y, p.radians(to), isReturn ? 11 : 8,
+          /* Tangent to the ellipse at the arrow tip, so the head still
+             points the right way once the ring is squashed. */
+          var end = pt(to), edge = pt(to - 2);
+          var tang = Math.atan2(end.y - edge.y, end.x - edge.x);
+          arrowHead(p, end.x, end.y, tang, isReturn ? 11 : 8,
                     p.color(isReturn ? C.ink : C.haze));
         }
 
-        /* the stream: a head and a trail for every exchange in flight */
+        /* the token: one command going round, one observation coming back */
+        var ph = (t % PERIOD) / PERIOD;
+        var tk = pt(ph * 360);
+        var onReturn = ph > 240 / 360;
         p.noStroke();
-        for (i = 0; i < TOKENS; i++) {
-          for (seg = 0; seg < TRAIL; seg++) {
-            var u2 = pos[i] - seg * 0.0055;
-            if (u2 < 0) { u2 += 1; }
-            var back = u2 > 240 / 360;
-            var c = pt(u2 * 360);
-            var f = 1 - seg / TRAIL;
-            p.fill(p.color(back ? C.ink : C.mark));
-            p.drawingContext.globalAlpha = Math.pow(f, 2.1) * 0.92;
-            p.circle(c.x, c.y, (back ? 6 : 5) + f * (back ? 9 : 7));
-          }
-        }
-        p.drawingContext.globalAlpha = 1;
+        p.fill(p.color(onReturn ? C.ink : C.mark));
+        p.circle(tk.x, tk.y, onReturn ? 13 : 11);
+        p.noFill();
+        p.stroke(p.color(onReturn ? C.ink : C.mark));
+        p.strokeWeight(1);
+        p.circle(tk.x, tk.y, 22 + 8 * Math.sin(t * 4));
 
-        /* nodes */
+        /* nodes: hover physics, a pedestal when lifted, then the node */
         for (i = 0; i < NODES.length; i++) {
-          n = NODES[i];
-          var cc = pt(n.th);
-          var e = ex[i] * ex[i];
+          var n = NODES[i], c = pt(n.th);
+          var dx = c.x - p.hx, dy = c.y - p.hy;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          var target = (p.hoverOn && dist < HOVER_R) ? (1 - dist / HOVER_R) : 0;
+          var wasLow = n.hover < 0.35;
+          n.hover = p.lerp(n.hover, target, 1 - Math.pow(0.001, dt));
+          var az = (target * 30 - n.ez) * 60 - n.vz * 9;
+          n.vz = (n.vz + az * dt) * 0.9;
+          n.ez += n.vz * dt;
+          if (wasLow && n.hover > 0.35 && !STILL) {
+            for (var sp = 0; sp < 8; sp++) {
+              sparks.push({
+                x: c.x, y: c.y, born: t,
+                a: (sp / 8) * Math.PI * 2 + p.random(-0.3, 0.3),
+                sp: p.random(42, 86), key: !!n.key
+              });
+            }
+          }
+
+          var cy2 = c.y - n.ez;
+          if (n.ez > 1.5) {
+            p.stroke(p.color(C.haze));
+            p.strokeWeight(1);
+            p.drawingContext.globalAlpha = 0.45;
+            p.line(c.x, cy2, c.x, c.y);
+            p.drawingContext.globalAlpha = 1;
+          }
+
           if (n.key) {
             p.noStroke();
             p.fill(p.color(C.mark));
-            p.circle(cc.x, cc.y, 22 + e * 10);
+            p.circle(c.x, cy2, 22 + n.hover * 6);
           } else {
             p.fill(p.color(C.paper));
             p.stroke(p.color(C.ink));
-            p.strokeWeight(1.5 + e * 1.2);
-            p.circle(cc.x, cc.y, 18 + e * 8);
+            p.strokeWeight(1.5);
+            p.circle(c.x, cy2, 18 + n.hover * 6);
           }
-          if (e > 0.04) {
-            p.noFill();
-            p.stroke(p.color(n.key ? C.mark : C.ink));
-            p.strokeWeight(1);
-            p.drawingContext.globalAlpha = e * 0.7;
-            p.circle(cc.x, cc.y, 30 + (1 - e) * 34);
-            p.drawingContext.globalAlpha = 1;
-          }
-          p.noStroke();
 
           var lx, la;
-          if (n.ax === 'left')  { lx = cc.x + 18; la = p.LEFT; }
-          else if (n.ax === 'right') { lx = cc.x - 18; la = p.RIGHT; }
-          else { lx = cc.x; la = p.CENTER; }
+          if (n.ax === 'left')  { lx = c.x + 18; la = p.LEFT; }
+          else if (n.ax === 'right') { lx = c.x - 18; la = p.RIGHT; }
+          else { lx = c.x; la = p.CENTER; }
 
           if (n.ax === 'center') {
-            label(p, n.t1, lx, cc.y + n.dy, p.body, C.ink, la);
+            label(p, n.t1, lx, cy2 + n.dy, p.body, C.ink, la);
             if (!p.narrow) {
-              label(p, n.t2, lx, cc.y + n.dy + (n.dy < 0 ? -24 : 22), p.detail, C.gray, la);
+              label(p, n.t2, lx, cy2 + n.dy + (n.dy < 0 ? -24 : 22), p.detail, C.gray, la);
             }
           } else {
-            label(p, n.t1, lx, cc.y - 5, p.body, C.ink, la);
-            if (!p.narrow) { label(p, n.t2, lx, cc.y + 17, p.detail, C.gray, la); }
+            label(p, n.t1, lx, cy2 - 5, p.body, C.ink, la);
+            if (!p.narrow) { label(p, n.t2, lx, cy2 + 17, p.detail, C.gray, la); }
           }
+        }
+
+        /* sparks, drawn last so they read above nodes and labels */
+        if (!STILL) {
+          p.noStroke();
+          for (i = sparks.length - 1; i >= 0; i--) {
+            var s2 = sparks[i];
+            var age = t - s2.born;
+            if (age > 0.45) { sparks.splice(i, 1); continue; }
+            var f = 1 - age / 0.45;
+            var sx = s2.x + Math.cos(s2.a) * s2.sp * age;
+            var sy = s2.y + Math.sin(s2.a) * s2.sp * age * SQ - 34 * age;
+            p.fill(p.color(s2.key ? C.mark : C.ink));
+            p.drawingContext.globalAlpha = f * f;
+            p.circle(sx, sy, 3.4 * f);
+          }
+          p.drawingContext.globalAlpha = 1;
         }
 
         label(p, 'return path', 292, 104, p.body, C.ink, p.RIGHT);
