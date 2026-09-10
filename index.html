@@ -423,6 +423,7 @@ a { color: inherit; }
 .diagram circle.node, .diagram circle.key {
   transform-box: fill-box; transform-origin: center;
 }
+.hover-halo { fill: none; stroke: var(--mark); opacity: 0; pointer-events: none; }
 .hero-key-ring { fill: none; stroke: var(--mark); stroke-width: 1.2; opacity: 0; }
 .hero-bolt { fill: none; stroke-linecap: round; opacity: 0; }
 .plan-signal { fill: var(--mark); opacity: 0; }
@@ -1220,6 +1221,7 @@ body.is-editing #ed-open { visibility: hidden; }
 
 <script>
 
+
 /* ---------------------------------------------------------------------------
    The three diagrams are the site's own static SVGs. On top of that
    unchanged artwork: the exact ambient motion the old p5 sketches carried —
@@ -1258,8 +1260,12 @@ body.is-editing #ed-open { visibility: hidden; }
     }
   }
 
-  /* Hover: nothing moves. Whatever the pointer is near catches a soft glow
-     along its own edge instead, eased in and out so it never snaps. */
+  var SVGNS = 'http://www.w3.org/2000/svg';
+
+  /* Hover: nothing moves. A ring of the page's own accent is drawn around
+     whatever the pointer is near, plain stroked SVG rather than a CSS
+     filter, which clips unpredictably on some engines when it sits inside
+     an SVG viewport. Eased in and out so it never snaps. */
   function setupHover(root, svg) {
     var sel = root.getAttribute('data-diagram') === 'plan'
       ? '.cell rect, rect.key'
@@ -1268,8 +1274,21 @@ body.is-editing #ed-open { visibility: hidden; }
       : '.hero-dot, .hero-key';
     var els = Array.prototype.slice.call(svg.querySelectorAll(sel));
     var nodes = els.map(function (el) {
-      var c = center(el);
-      return { el: el, hx: c.x, hy: c.y, g: 0 };
+      var b = el.getBBox();
+      var halo;
+      if (el.tagName.toLowerCase() === 'rect') {
+        halo = document.createElementNS(SVGNS, 'rect');
+        halo.setAttribute('rx', 3);
+      } else {
+        halo = document.createElementNS(SVGNS, 'circle');
+      }
+      halo.setAttribute('class', 'hover-halo');
+      halo.style.opacity = 0;
+      svg.appendChild(halo);
+      return {
+        el: el, halo: halo, box: b,
+        hx: b.x + b.width / 2, hy: b.y + b.height / 2, g: 0
+      };
     });
     var mouse = { x: -9999, y: -9999 }, hovering = false, raf = null;
     function physics() {
@@ -1282,10 +1301,21 @@ body.is-editing #ed-open { visibility: hidden; }
         n.g += (target - n.g) * Math.min(1, dt * 10);
         if (Math.abs(target - n.g) > 0.003) { moving = true; }
         if (n.g > 0.003) {
-          n.el.style.filter = 'drop-shadow(0 0 ' + (2 + n.g * 5).toFixed(1) +
-            'px var(--mark)) brightness(' + (1 + n.g * 0.5).toFixed(2) + ')';
-        } else {
-          n.el.style.filter = '';
+          var pad = 3 + n.g * 6;
+          if (n.halo.tagName.toLowerCase() === 'rect') {
+            set(n.halo, {
+              x: (n.box.x - pad).toFixed(1), y: (n.box.y - pad).toFixed(1),
+              width: (n.box.width + pad * 2).toFixed(1), height: (n.box.height + pad * 2).toFixed(1),
+              opacity: Math.min(1, n.g * 1.3).toFixed(2)
+            });
+          } else {
+            var r = Math.max(n.box.width, n.box.height) / 2 + pad;
+            set(n.halo, { cx: n.hx.toFixed(1), cy: n.hy.toFixed(1), r: r.toFixed(1),
+              opacity: Math.min(1, n.g * 1.3).toFixed(2) });
+          }
+          n.halo.setAttribute('stroke-width', (1 + n.g * 1.4).toFixed(2));
+        } else if (n.g <= 0.003) {
+          n.halo.style.opacity = 0;
         }
       }
       if (moving) { raf = requestAnimationFrame(physics); } else { raf = null; }
@@ -1328,7 +1358,7 @@ body.is-editing #ed-open { visibility: hidden; }
     });
     var keyKey = keyOf(+key.getAttribute('cx'), +key.getAttribute('cy'));
     var allKeys = Object.keys(adj);
-    var LIFE = 0.62, STEP = 0.055, MAX = 14;
+    var LIFE = 1.1, STEP = 0.09, MAX = 6;
     var bolts = [], nextSpawn = 0;
 
     function jitPath(A, B, jit, amp) {
@@ -1361,7 +1391,7 @@ body.is-editing #ed-open { visibility: hidden; }
       var i, si;
       if (t > nextSpawn) {
         if (bolts.length < MAX) { spawn(t); }
-        nextSpawn = t + 0.06 + Math.random() * 0.14;
+        nextSpawn = t + 0.45 + Math.random() * 0.85;
       }
       for (i = bolts.length - 1; i >= 0; i--) {
         if (t - bolts[i].born > LIFE + bolts[i].path.length * STEP) { bolts.splice(i, 1); }
@@ -1480,6 +1510,7 @@ body.is-editing #ed-open { visibility: hidden; }
   var roots = document.querySelectorAll('[data-diagram]');
   for (var i = 0; i < roots.length; i++) { setupDiagram(roots[i]); }
 }());
+
 
 
 </script>
