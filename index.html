@@ -411,17 +411,35 @@ a { color: inherit; }
   color: var(--gray); max-width: 58ch; margin: var(--sp-3) 0 0;
 }
 
-/* Each graphic ships as inline SVG and is upgraded to a p5 canvas when the
-   script runs. The SVG is never removed: with JavaScript off it is the
-   picture, and with JavaScript on it is moved out of sight but left in the
-   accessibility tree so its <title> and <desc> still answer for the canvas.
-   display:none would drop it from that tree, so it is clipped instead. */
-.sketch { width: 100%; }
-.sketch canvas { display: block; width: 100% !important; height: auto !important; }
-.has-sketch .fallback {
-  position: absolute; width: 1px; height: 1px;
-  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+/* --- Diagrams: the page's own static SVGs, now interactive ------------- */
+/* opening.science runs its own diagrams this way: plain SVG, no canvas, no
+   drawing library. A magnetic scatter flees the pointer and a click tilts
+   the whole piece into an isometric view; the artwork underneath is exactly
+   what the page already draws with no script running at all. */
+.diagram {
+  width: 100%; cursor: pointer;
+  perspective: 1100px;
 }
+.diagram svg {
+  display: block; width: 100%; height: auto;
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.diagram.is-tilted svg {
+  transform: rotateX(26deg) rotateY(-18deg) scale(0.93);
+}
+.diagram .hero-dot, .diagram .hero-key,
+.diagram .cell rect, .diagram rect.key,
+.diagram circle.node, .diagram circle.key {
+  transform-box: fill-box; transform-origin: center;
+}
+.diagram:focus-visible { outline: 2px solid var(--blue); outline-offset: 6px; }
+.hero-key-ring { fill: none; stroke: var(--mark); stroke-width: 1.2; }
+.plan-signal, .loop-token { fill: var(--mark); }
+@media (prefers-reduced-motion: reduce) {
+  .diagram svg { transition: none; }
+}
+
 .plate { position: relative; }
 
 .dg text { font-family: var(--font-mono); font-size: 13px; fill: var(--ink); }
@@ -677,9 +695,7 @@ body.is-editing #ed-open { visibility: hidden; }
           <p class="lede"><a href="https://www.gaudi.ch/OpenDrop/">GaudiLabs</a> (Urs Gaudenz, Miranda Moss) and <a href="https://radicaldesignstudio.eu">Radical Design Studio</a> (JB Labrune) have partnered inside the <a href="https://opening.science">Open Science Foundation</a> at Etherlaken to build a physical laboratory operable end to end through human-AI collaboration, from a browser or a phone. The first prototype, the OpenDrop BioServer, was installed on Tuesday, September 1, 2026, in the premises that prefigure the foundation site in Interlaken, Switzerland.</p>
         </div>
         <figure class="hero-figure">
-          <div class="sketch" data-sketch="hero" aria-hidden="true"></div>
-          <div class="fallback">
-          <svg viewBox="32 32 536 536" role="img" aria-labelledby="hdt hdd" preserveAspectRatio="xMidYMid meet">
+          <div class="diagram" data-diagram="hero"><svg viewBox="32 32 536 536" role="img" aria-labelledby="hdt hdd" preserveAspectRatio="xMidYMid meet">
             <title id="hdt">Fifty-four machine slots, one filled</title>
             <desc id="hdd">Fifty-four dots arranged in a spiral, one for each machine slot on a biocenter floor, identical to each other and each wired by a faint line to its two nearest neighbours. One dot near the center is drawn in the accent color: the OpenDrop BioServer, the only unit installed so far. Bolts of light run along the wiring, two in five of them starting at that one unit.</desc>
             <g class="hero-web">
@@ -761,6 +777,7 @@ body.is-editing #ed-open { visibility: hidden; }
             <circle class="hero-dot" cx="346.7" cy="200.2" r="7.5"></circle>
             <circle class="hero-dot" cx="334.5" cy="410.1" r="7.5"></circle>
             <circle class="hero-key" cx="195.9" cy="239.7" r="12.0"></circle>
+            <circle class="hero-key-ring" cx="195.9" cy="239.7" r="12"><animate attributeName="r" values="12;26;12" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.55;0;0.55" dur="2.6s" repeatCount="indefinite"/></circle>
             <circle class="hero-dot" cx="422.1" cy="273.2" r="7.5"></circle>
             <circle class="hero-dot" cx="225.5" cy="406.0" r="7.5"></circle>
             <circle class="hero-dot" cx="282.8" cy="167.2" r="7.5"></circle>
@@ -802,8 +819,7 @@ body.is-editing #ed-open { visibility: hidden; }
             <circle class="hero-dot" cx="57.7" cy="330.2" r="7.5"></circle>
             <circle class="hero-dot" cx="459.8" cy="112.3" r="7.5"></circle>
             <circle class="hero-dot" cx="309.1" cy="548.7" r="7.5"></circle>
-          </svg>
-          </div>
+          </svg></div>
         </figure>
       </div>
     </div>
@@ -831,8 +847,7 @@ body.is-editing #ed-open { visibility: hidden; }
       </div>
       <div class="pair">
         <figure class="plate">
-          <div class="sketch" data-sketch="plan" aria-hidden="true"></div>
-          <div class="fallback"><svg class="dg" viewBox="0 0 760 540" role="img" aria-labelledby="d1t d1d" preserveAspectRatio="xMidYMid meet">
+          <div class="diagram" data-diagram="plan"><svg class="dg" viewBox="0 0 760 540" role="img" aria-labelledby="d1t d1d" preserveAspectRatio="xMidYMid meet">
           <title id="d1t">Plan of one floor of an Open Biocenter</title>
           <desc id="d1d">A rectangular floor plan. Nine columns of three machine slots run along the top half and nine more along the bottom half, separated by a service corridor. Fifty-four slots in total, drawn identically to show that the facility is built by repeating one unit. One slot in the third column of the top half is filled in a warm tint and labeled as the OpenDrop BioServer, the single unit installed so far.</desc>
 
@@ -862,6 +877,7 @@ body.is-editing #ed-open { visibility: hidden; }
           <!-- service corridor -->
           <path class="line" d="M20 254 L740 254 M20 294 L740 294"></path>
           <text class="det" x="380" y="280" text-anchor="middle">service corridor</text>
+          <circle class="plan-signal" cy="274" cx="20" r="5"><animate attributeName="cx" values="20;740;20" dur="7s" repeatCount="indefinite"/></circle>
 
           <!-- bottom bank -->
           <g class="cell">
@@ -896,8 +912,7 @@ body.is-editing #ed-open { visibility: hidden; }
         <p>On the way back, deep machine vision reads the images and world models turn them into a state the team can act on.</p>
       </div>
       <figure class="plate">
-        <div class="sketch" data-sketch="loop" aria-hidden="true"></div>
-        <div class="fallback"><svg class="dg" id="loop-dg" viewBox="0 0 760 500" role="img" aria-labelledby="d2t d2d" preserveAspectRatio="xMidYMid meet">
+        <div class="diagram" data-diagram="loop"><svg class="dg" id="loop-dg" viewBox="0 0 760 500" role="img" aria-labelledby="d2t d2d" preserveAspectRatio="xMidYMid meet">
           <title id="d2t">The remote experimentation loop</title>
           <desc id="d2d">A closed ring of six stages, read clockwise from the top. A distributed team acts through a browser or phone interface. The command reaches the machines in Interlaken and moves a physical sample. Sensors and a camera observe what happened, an AI collaboration layer built on deep machine vision and world models turns that observation into a state the team can act on, and it arrives back at the team, closing the loop. The last two stages, observation to AI layer to team, are the return path and are drawn in full weight.</desc>
           <defs>
@@ -927,6 +942,8 @@ body.is-editing #ed-open { visibility: hidden; }
           <circle class="node" cx="380" cy="400" r="9"></circle>
           <circle class="node" cx="250.1" cy="325" r="9"></circle>
           <circle class="key" cx="250.1" cy="175" r="11"></circle>
+          <path id="loopring" d="M380,100 A150,150 0 1,1 379.9,100 Z" fill="none" stroke="none"></path>
+          <circle class="loop-token" r="7"><animateMotion dur="9s" repeatCount="indefinite" rotate="0"><mpath href="#loopring" xlink:href="#loopring"></mpath></animateMotion></circle>
 
           <!-- labels -->
           <text class="det" x="380" y="52" text-anchor="middle">distributed</text>
@@ -946,8 +963,7 @@ body.is-editing #ed-open { visibility: hidden; }
 
           <text x="232" y="170" text-anchor="end">AI layer</text>
           <text class="det" x="232" y="192" text-anchor="end">vision, world models</text>
-        </svg>
-</div>
+        </svg></div>
       </figure>
 
       <figure class="shot wide-shot shot--right">
@@ -1155,7 +1171,7 @@ body.is-editing #ed-open { visibility: hidden; }
     <p class="ed-open-line"><a id="ed-open" href="#edit">Edit this page</a></p>
   </div></footer>
 
-<script src="/p5.min.js" defer></script>
+
 
 
 <script>
@@ -1182,760 +1198,120 @@ body.is-editing #ed-open { visibility: hidden; }
 }());
 </script>
 
-<script>/* ---------------------------------------------------------------------------
-   Three p5.js sketches, instance mode, one per graphic.
-
-   Each one draws in the logical coordinate system of the inline SVG it
-   replaces, so the geometry is identical and the SVG stays a faithful
-   fallback. The SVG is not removed from the document: it is moved out of
-   sight but kept in the accessibility tree, which is what carries the
-   <title> and <desc> for anyone not looking at the canvas.
-
-   Palette values are read from the custom properties so the page keeps one
-   source of truth for color.
+<script>
+/* ---------------------------------------------------------------------------
+   The three diagrams are the site's own static SVGs, the ones already
+   authored to carry the page with no script at all. This adds two things on
+   top of that unchanged artwork: a gentle magnetic scatter that flees the
+   pointer, and a click that tilts the whole diagram into an isometric view.
+   No canvas, no drawing library: plain DOM, the way opening.science does it.
 --------------------------------------------------------------------------- */
-window.addEventListener('DOMContentLoaded', function () {
+(function () {
   'use strict';
 
-  if (typeof p5 !== 'function') { return; }
+  var REDUCE = window.matchMedia &&
+               window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var RADIUS = 70, STRENGTH = 46;
 
-  /* p5's friendly error system would reach for translation files on a CDN.
-     The page makes no third-party request, so it is switched off here, now
-     that p5 is actually loaded. */
-  p5.disableFriendlyErrors = true;
-
-  var root = document.documentElement;
-  function prop(name) {
-    return getComputedStyle(root).getPropertyValue(name).trim();
+  function svgPoint(svg, clientX, clientY) {
+    var pt = svg.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    var m = svg.getScreenCTM();
+    if (!m) { return { x: 0, y: 0 }; }
+    var p = pt.matrixTransform(m.inverse());
+    return { x: p.x, y: p.y };
   }
 
-  var C = {
-    paper: prop('--paper') || '#ffffff',
-    ink:   prop('--ink')   || '#1d1d1d',
-    gray:  prop('--gray')  || '#646363',
-    haze:  prop('--haze')  || '#6f6e66',
-    mark:  prop('--mark')  || '#73adff'
-  };
-
-  var MONO = '"ABC Diatype Semi Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
-  var STILL = window.matchMedia &&
-              window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* Every sketch draws at its logical size and is scaled to the container.
-     Labels grow and detail labels drop when the rendered width gets small,
-     which is the canvas equivalent of the media query on the SVG text. */
-  function makeBase(logicalW, logicalH) {
-    return function (p, host) {
-      p.LW = logicalW;
-      p.LH = logicalH;
-      p.fit = function () {
-        var w = host.clientWidth || logicalW;
-        p.k = w / logicalW;
-        p.narrow = w < 520;
-        p.body = p.narrow ? 30 : 13;
-        p.detail = 11;
-        return { w: w, h: Math.round(logicalH * p.k) };
-      };
-    };
+  function center(el) {
+    var b = el.getBBox();
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
   }
 
-  /* Isometric offset for a point z units above the page, relative to
-     whatever center the caller is drawing around. A light, fixed 2:1 tilt,
-     not a full 3D camera: enough to lift the diagrams off the page on
-     hover without turning them into something that needs to be orbited. */
-  function isoOff(dx, dy, z) {
-    return { x: (dx - dy) * 0.87, y: (dx + dy) * 0.5 - z };
-  }
+  function setupDiagram(root) {
+    var svg = root.querySelector('svg');
+    if (!svg) { return; }
+    var sel = root.getAttribute('data-diagram') === 'plan'
+      ? '.cell rect, rect.key'
+      : root.getAttribute('data-diagram') === 'loop'
+      ? 'circle.node, circle.key'
+      : '.hero-dot, .hero-key';
+    var els = Array.prototype.slice.call(svg.querySelectorAll(sel));
+    var nodes = els.map(function (el) {
+      var c = center(el);
+      return { el: el, hx: c.x, hy: c.y, ex: 0, ey: 0, vx: 0, vy: 0 };
+    });
 
-  /* Cursor-driven explosion, shared by all three sketches: every node keeps
-     a spring-loaded displacement that flees the pointer when it gets close
-     and relaxes back to zero the instant it does not. Same idea Zach
-     Lieberman's and Golan Levin's toys run on, kept to arithmetic simple
-     enough to stay legible at a glance. */
-  function makeExploder(p, radius, strength) {
-    return function (node, dt, mx, my, active) {
-      var dx = node.hx - mx, dy = node.hy - my;
-      var dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
-      var ax = 0, ay = 0, az = 0;
-      if (active && dist < radius) {
-        var f = (1 - dist / radius); f *= f;
-        ax = (dx / dist) * f * strength;
-        ay = (dy / dist) * f * strength;
-        az = f * strength * 0.55;
+    var mouse = { x: -9999, y: -9999 }, hovering = false, raf = null;
+
+    function physics() {
+      var i, n, dt = 1 / 60;
+      var moving = false;
+      for (i = 0; i < nodes.length; i++) {
+        n = nodes[i];
+        var dx = n.hx - mouse.x, dy = n.hy - mouse.y;
+        var dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
+        var ax = 0, ay = 0;
+        if (hovering && dist < RADIUS) {
+          var f = 1 - dist / RADIUS; f *= f;
+          ax = (dx / dist) * f * STRENGTH;
+          ay = (dy / dist) * f * STRENGTH;
+        }
+        ax += -n.ex * 40; ay += -n.ey * 40;
+        n.vx = (n.vx + ax * dt) * 0.82;
+        n.vy = (n.vy + ay * dt) * 0.82;
+        n.ex += n.vx * dt; n.ey += n.vy * dt;
+        if (Math.abs(n.ex) > 0.02 || Math.abs(n.ey) > 0.02 || Math.abs(n.vx) > 0.02) {
+          moving = true;
+        }
+        n.el.style.transform = 'translate(' + n.ex.toFixed(2) + 'px,' + n.ey.toFixed(2) + 'px)';
       }
-      ax += -node.ex * 46; ay += -node.ey * 46; az += -node.ez * 46;
-      node.vx = (node.vx + ax * dt) * 0.86;
-      node.vy = (node.vy + ay * dt) * 0.86;
-      node.vz = (node.vz + az * dt) * 0.86;
-      node.ex += node.vx * dt; node.ey += node.vy * dt; node.ez += node.vz * dt;
-    };
-  }
-
-  function common(p, host, logicalW, logicalH, drawFn) {
-    makeBase(logicalW, logicalH)(p, host);
-
-    p.hoverOn = false;
-    p.hx = -9999; p.hy = -9999;
-
-    function trackHover(e) {
-      var r = p.canvas.getBoundingClientRect();
-      var cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-      var cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
-      p.hx = cx / p.k; p.hy = cy / p.k;
-      p.hoverOn = true;
-      if (STILL) { p.redraw(); }
-    }
-    function clearHover() {
-      p.hoverOn = false;
-      if (STILL) { p.redraw(); }
+      if (moving) { raf = requestAnimationFrame(physics); } else { raf = null; }
     }
 
-    p.setup = function () {
-      var s = p.fit();
-      var c = p.createCanvas(s.w, s.h);
-      c.canvas.setAttribute('aria-hidden', 'true');
-      p.pixelDensity(Math.min(2, window.devicePixelRatio || 1));
-      p.textFont(MONO);
-      p.strokeJoin(p.ROUND);
-      c.canvas.addEventListener('pointermove', trackHover);
-      c.canvas.addEventListener('pointerleave', clearHover);
-      c.canvas.addEventListener('touchmove', trackHover, { passive: true });
-      c.canvas.addEventListener('touchend', clearHover);
-      if (STILL) { p.noLoop(); }
-    };
+    function kick() { if (!raf) { raf = requestAnimationFrame(physics); } }
 
-    p.windowResized = function () {
-      var s = p.fit();
-      p.resizeCanvas(s.w, s.h);
-      if (STILL) { p.redraw(); }
-    };
+    function onMove(e) {
+      var t = e.touches ? e.touches[0] : e;
+      var p = svgPoint(svg, t.clientX, t.clientY);
+      mouse.x = p.x; mouse.y = p.y;
+      hovering = true;
+      kick();
+    }
+    function onLeave() { hovering = false; kick(); }
 
-    p.draw = function () {
-      p.clear();
-      p.push();
-      p.scale(p.k);
-      drawFn(p, STILL ? 0 : p.millis() / 1000);
-      p.pop();
-    };
+    if (!REDUCE) {
+      svg.addEventListener('pointermove', onMove);
+      svg.addEventListener('pointerleave', onLeave);
+      svg.addEventListener('touchmove', onMove, { passive: true });
+      svg.addEventListener('touchend', onLeave);
+    } else {
+      var motions = svg.querySelectorAll('animate, animateMotion');
+      for (var m = 0; m < motions.length; m++) { motions[m].setAttribute('repeatCount', '1'); }
+      if (svg.pauseAnimations) { svg.pauseAnimations(); }
+    }
+
+    /* Click tilts the whole diagram into an isometric view and back. The
+       pointer math above keeps working mid-tilt: getScreenCTM reads the
+       live CSS transform, so the scatter still targets the right pixels. */
+    root.addEventListener('click', function () {
+      root.classList.toggle('is-tilted');
+    });
+    var t = svg.querySelector('title');
+    root.setAttribute('tabindex', '0');
+    root.setAttribute('role', 'button');
+    root.setAttribute('aria-label', (t ? t.textContent : 'Diagram') + ', click or press Enter to tilt in 3D');
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        root.classList.toggle('is-tilted');
+      }
+    });
   }
 
-  /* Small helpers ------------------------------------------------------- */
-  function label(p, txt, x, y, size, col, align) {
-    p.noStroke();
-    p.fill(col);
-    p.textSize(size);
-    p.textAlign(align || p.LEFT, p.BASELINE);
-    p.text(txt, x, y);
-  }
+  var roots = document.querySelectorAll('[data-diagram]');
+  for (var i = 0; i < roots.length; i++) { setupDiagram(roots[i]); }
+}());
 
-  function arrowHead(p, x, y, angle, size, col) {
-    p.push();
-    p.translate(x, y);
-    p.rotate(angle);
-    p.noStroke();
-    p.fill(col);
-    p.beginShape();
-    p.vertex(0, 0);
-    p.vertex(-size, size * 0.42);
-    p.vertex(-size, -size * 0.42);
-    p.endShape(p.CLOSE);
-    p.pop();
-  }
-
-  /* --- 1. Hero dot field ------------------------------------------------
-     Fifty-four dots on a phyllotaxis spiral, one per machine slot. Each one
-     drifts inside a small radius on its own noise field, so the field
-     breathes without any dot ever leaving its slot. The filled dot is the
-     one unit that runs. */
-  /* --- 1. Hero dot field ------------------------------------------------
-     Fifty-four dots on a phyllotaxis spiral, one per machine slot, laid out
-     in a light isometric relief so the field reads as a raised surface
-     rather than flat paper. Each one drifts inside a small radius on its
-     own noise field, so the field breathes without any dot ever leaving its
-     slot. The filled dot is the one unit that runs.
-
-     Hovering scatters whatever is nearby: every dot carries a small spring
-     that flees the pointer and pops upward in the isometric relief, then
-     relaxes back the instant the pointer moves on. */
-  function heroSketch(host) {
-    return function (p) {
-      var N = 54, KEY = 12, R = 250, CX = 268, CY = 268;
-      var GA = Math.PI * (3 - Math.sqrt(5));
-      var K = 2;                 /* nearest neighbours wired per slot */
-      var LIFE = 0.62;           /* seconds a bolt stays lit */
-      var STEP = 0.055;          /* seconds before the next hop lights */
-      var MAX = 9;
-      var dots = [], edges = [], adj = [], bolts = [], nextSpawn = 0;
-      var explode = makeExploder(p, 92, 210);
-
-      var i, j;
-      for (i = 0; i < N; i++) {
-        var r = R * Math.sqrt((i + 0.5) / N), a = i * GA;
-        dots.push({
-          hx: CX + r * Math.cos(a),
-          hy: CY + r * Math.sin(a),
-          x: 0, y: 0, sx: 0, sy: 0,
-          ex: 0, ey: 0, ez: 0, vx: 0, vy: 0, vz: 0,
-          zBase: 3 + 7 * ((i * 53) % 11) / 10,
-          key: i === KEY,
-          seed: i * 37.7
-        });
-        adj.push([]);
-      }
-
-      /* The graph is built once from the home positions, so the wiring does
-         not rearrange itself while the field drifts. */
-      var seen = {};
-      for (i = 0; i < N; i++) {
-        var near = [];
-        for (j = 0; j < N; j++) {
-          if (j === i) { continue; }
-          var dx = dots[i].hx - dots[j].hx, dy = dots[i].hy - dots[j].hy;
-          near.push({ j: j, d: dx * dx + dy * dy });
-        }
-        near.sort(function (u, v) { return u.d - v.d; });
-        for (j = 0; j < K; j++) {
-          var lo = Math.min(i, near[j].j), hi = Math.max(i, near[j].j);
-          var key = lo + '-' + hi;
-          if (seen[key]) { continue; }
-          seen[key] = 1;
-          edges.push([lo, hi]);
-          adj[lo].push(hi);
-          adj[hi].push(lo);
-        }
-      }
-
-      /* A bolt is a short random walk over the wiring. Two in five start at
-         the one running unit, so the field reads as a network with one live
-         machine on it. */
-      function spawn(p, t) {
-        var from = (p.random() < 0.4) ? KEY : Math.floor(p.random(N));
-        var path = [from], jit = [], hops = 2 + Math.floor(p.random(3));
-        for (var h = 0; h < hops; h++) {
-          var opts = adj[path[path.length - 1]].filter(function (n) {
-            return path.indexOf(n) === -1;
-          });
-          if (!opts.length) { break; }
-          path.push(opts[Math.floor(p.random(opts.length))]);
-          jit.push([p.random(-1, 1), p.random(-1, 1), p.random(-1, 1)]);
-        }
-        if (path.length < 2) { return; }
-        bolts.push({ path: path, jit: jit, born: t, key: from === KEY });
-      }
-
-      function bolt(p, x0, y0, x1, y1, jit, amp) {
-        var dx = x1 - x0, dy = y1 - y0;
-        var len = Math.sqrt(dx * dx + dy * dy) || 1;
-        var nx = -dy / len, ny = dx / len;
-        p.beginShape();
-        p.vertex(x0, y0);
-        for (var k = 1; k <= 3; k++) {
-          var f = k / 4;
-          var o = jit[k - 1] * amp * Math.sin(f * Math.PI);
-          p.vertex(x0 + dx * f + nx * o, y0 + dy * f + ny * o);
-        }
-        p.vertex(x1, y1);
-        p.endShape();
-      }
-
-      common(p, host, 536, 536, function (p, t) {
-        var i, e, b, si;
-        var dt = Math.min(0.05, (p.deltaTime || 16) / 1000);
-
-        /* drift, explosion physics, then the isometric projection that
-           turns (drifted position, elevation) into what is actually drawn */
-        for (i = 0; i < N; i++) {
-          var d = dots[i];
-          d.x = d.hx + (p.noise(d.seed, t * 0.14) - 0.5) * 26;
-          d.y = d.hy + (p.noise(d.seed + 91.3, t * 0.14) - 0.5) * 26;
-          explode(d, dt, p.hx, p.hy, p.hoverOn);
-          var off = isoOff(d.x - CX + d.ex, d.y - CY + d.ey, d.zBase + d.ez);
-          d.sx = CX + off.x; d.sy = CY + off.y;
-        }
-
-        /* the wiring, barely there until something runs on it */
-        p.noFill();
-        p.stroke(p.color(C.haze));
-        p.strokeWeight(1);
-        p.drawingContext.globalAlpha = 0.22;
-        for (i = 0; i < edges.length; i++) {
-          e = edges[i];
-          p.line(dots[e[0]].sx, dots[e[0]].sy, dots[e[1]].sx, dots[e[1]].sy);
-        }
-        p.drawingContext.globalAlpha = 1;
-
-        /* bolts */
-        if (!STILL) {
-          if (t > nextSpawn) {
-            if (bolts.length < MAX) { spawn(p, t); }
-            nextSpawn = t + p.random(0.18, 0.5);
-          }
-          for (i = bolts.length - 1; i >= 0; i--) {
-            if (t - bolts[i].born > LIFE + bolts[i].path.length * STEP) {
-              bolts.splice(i, 1);
-            }
-          }
-          p.noFill();
-          p.strokeCap(p.ROUND);
-          for (i = 0; i < bolts.length; i++) {
-            b = bolts[i];
-            var age = t - b.born;
-            for (si = 0; si < b.path.length - 1; si++) {
-              var lit = age - si * STEP;
-              if (lit < 0) { break; }
-              var f = 1 - lit / LIFE;
-              if (f <= 0) { continue; }
-              var A = dots[b.path[si]], B = dots[b.path[si + 1]];
-              p.stroke(p.color(b.key ? C.mark : C.ink));
-              p.strokeWeight(f > 0.85 ? 2.2 : 1.4);
-              p.drawingContext.globalAlpha = Math.pow(f, 1.6);
-              bolt(p, A.sx, A.sy, B.sx, B.sy, b.jit[si], 11);
-            }
-          }
-          p.drawingContext.globalAlpha = 1;
-        }
-
-        /* slots: a stem to the ground plane sells the lift when a dot pops
-           up under the pointer, then the disc itself */
-        p.noStroke();
-        for (i = 0; i < N; i++) {
-          var q = dots[i];
-          var lifted = q.zBase + q.ez;
-          if (lifted > 1.2) {
-            var groundOff = isoOff(q.x - CX + q.ex, q.y - CY + q.ey, 0);
-            p.stroke(p.color(C.haze));
-            p.strokeWeight(1);
-            p.drawingContext.globalAlpha = 0.4;
-            p.line(q.sx, q.sy, CX + groundOff.x, CY + groundOff.y);
-            p.drawingContext.globalAlpha = 1;
-            p.noStroke();
-          }
-          if (q.key) {
-            var pulse = 0.5 + 0.5 * Math.sin(t * 1.6);
-            p.noFill();
-            p.stroke(p.color(C.mark));
-            p.strokeWeight(1.2);
-            p.circle(q.sx, q.sy, 30 + pulse * 16);
-            p.noStroke();
-            p.fill(p.color(C.mark));
-            p.circle(q.sx, q.sy, 24);
-          } else {
-            var pop = p.constrain(q.ez / 40, 0, 1);
-            p.fill(p.color(pop > 0.15 ? C.mark : C.ink));
-            p.circle(q.sx, q.sy, 15 + pop * 10);
-          }
-        }
-      });
-    };
-  }
-
-  /* --- 2. Plan of one floor ---------------------------------------------
-     The static plan, plus one signal running the service corridor. Each
-     time the signal passes under the installed unit it branches up into
-     the slot, which brightens and settles. That is the network reaching
-     the one machine that answers.
-
-     Every bay now stands as a small isometric block above its footprint on
-     the floor, the installed one taller and lit. Hovering lifts whichever
-     block is under the pointer and throws a short burst of sparks off it,
-     the same explosive pop as the hero field, scoped to one machine at a
-     time so the architecture underneath stays legible. */
-  function planSketch(host) {
-    return function (p) {
-      var COLS = [48, 126, 204, 282, 360, 438, 516, 594, 672];
-      var TOP = [128, 164, 200], BOT = [330, 366, 402];
-      var CW = 56, CH = 30;
-      var KEYX = 204, KEYY = 128;
-      var CORR_Y = 274, BRANCH_X = KEYX + CW / 2;
-      var WALL = { x: 20, y: 84, w: 720, h: 380 };
-      var PERIOD = 7.0;
-      var HOVER_R = 46;
-      var bays = [], sparks = [];
-
-      function addBay(x, y, filled) {
-        bays.push({ x: x, y: y, filled: filled, ez: 0, vz: 0, hover: 0 });
-      }
-      var r, c;
-      for (r = 0; r < TOP.length; r++) {
-        for (c = 0; c < COLS.length; c++) {
-          if (COLS[c] === KEYX && TOP[r] === KEYY) { continue; }
-          addBay(COLS[c], TOP[r], false);
-        }
-      }
-      for (r = 0; r < BOT.length; r++) {
-        for (c = 0; c < COLS.length; c++) { addBay(COLS[c], BOT[r], false); }
-      }
-      var keyBay = { x: KEYX, y: KEYY, filled: true, ez: 0, vz: 0, hover: 0 };
-      bays.push(keyBay);
-
-      /* One bay drawn as a small isometric block: a base outline exactly
-         where the old flat rectangle sat, so the corridor and branch wiring
-         below still line up pixel for pixel, and a lifted, skewed cap above
-         it standing in for height. */
-      function bay(p, b) {
-        var x = b.x, y = b.y;
-        /* A gentler skew than the hero field's: at full hover lift this
-           still has to fit inside the 22px gap between columns, or a raised
-           bay would visually collide with its neighbour. */
-        var elev = 5 + b.ez + (b.filled ? 6 : 0);
-        var off = { x: elev * 0.5, y: -elev * 0.32 };
-        var topCol = b.filled ? C.mark : (b.hover > 0.1 ? C.ink : C.haze);
-        var fillTop = b.filled || b.hover > 0.4;
-
-        /* base footprint, always present, exactly as before */
-        p.noFill();
-        p.stroke(p.color(C.haze));
-        p.strokeWeight(1);
-        p.rect(x, y, CW, CH);
-
-        /* side faces, shaded a step darker than the top */
-        p.noStroke();
-        p.fill(p.color(C.haze));
-        p.drawingContext.globalAlpha = 0.55;
-        p.quad(x + CW, y, x + CW, y + CH, x + CW + off.x, y + CH + off.y, x + CW + off.x, y + off.y);
-        p.quad(x, y + CH, x + CW, y + CH, x + CW + off.x, y + CH + off.y, x + off.x, y + CH + off.y);
-        p.drawingContext.globalAlpha = 1;
-
-        /* top cap */
-        p.stroke(p.color(topCol));
-        p.strokeWeight(1);
-        if (fillTop) { p.fill(p.color(topCol)); } else { p.noFill(); }
-        p.rect(x + off.x, y + off.y, CW, CH);
-
-        /* the two connections every machine makes, power and network */
-        p.stroke(p.color(fillTop ? C.paper : C.haze));
-        p.strokeWeight(1);
-        p.line(x + off.x + 7, y + off.y + 5, x + off.x + 7, y + off.y + CH - 5);
-        p.noStroke();
-        p.fill(p.color(fillTop ? C.paper : C.haze));
-        p.rect(x + off.x + 45, y + off.y + 8, 4, 4);
-        p.rect(x + off.x + 45, y + off.y + 18, 4, 4);
-      }
-
-      common(p, host, 760, 540, function (p, t) {
-        var phase = (t % PERIOD) / PERIOD;
-        var sigX = p.lerp(WALL.x, WALL.x + WALL.w, phase);
-        var hitPhase = (BRANCH_X - WALL.x) / WALL.w;
-        var since = phase - hitPhase;
-        if (since < 0) { since += 1; }
-        var since_s = since * PERIOD;
-        var cx, i;
-        var dt = Math.min(0.05, (p.deltaTime || 16) / 1000);
-
-        if (!p.narrow) { label(p, 'plan of one floor', 20, 28, p.detail, C.gray); }
-
-        /* callout to the one installed unit */
-        label(p, 'OpenDrop BioServer', 406, 62, p.body, C.ink);
-        p.stroke(p.color(C.haze));
-        p.strokeWeight(1);
-        p.noFill();
-        p.beginShape();
-        p.vertex(232, 128); p.vertex(232, 72); p.vertex(400, 72);
-        p.endShape();
-
-        /* outer wall, then a doorway cut into the left side */
-        p.stroke(p.color(C.ink));
-        p.strokeWeight(1.5);
-        p.noFill();
-        p.rect(WALL.x, WALL.y, WALL.w, WALL.h, 4);
-        p.stroke(p.color(C.paper));
-        p.strokeWeight(3);
-        p.line(WALL.x, 252, WALL.x, 296);
-        p.stroke(p.color(C.ink));
-        p.strokeWeight(1);
-        p.line(WALL.x - 5, 252, WALL.x + 5, 252);
-        p.line(WALL.x - 5, 296, WALL.x + 5, 296);
-        if (!p.narrow) {
-          label(p, 'goods in', 28, 246, p.detail, C.gray, p.LEFT);
-        }
-
-        /* every bay: hover physics first */
-        var lifted = null, liftedZ = -1;
-        for (i = 0; i < bays.length; i++) {
-          var b = bays[i];
-          var bx = b.x + CW / 2, by = b.y + CH / 2;
-          var dx = bx - p.hx, dy = by - p.hy;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-          var target = (p.hoverOn && dist < HOVER_R) ? (1 - dist / HOVER_R) : 0;
-          var wasLow = b.hover < 0.35;
-          b.hover = p.lerp(b.hover, target, 1 - Math.pow(0.001, dt));
-          var az = (target * 15 - b.ez) * 60 - b.vz * 9;
-          b.vz = (b.vz + az * dt) * 0.9;
-          b.ez += b.vz * dt;
-          if (wasLow && b.hover > 0.35 && !STILL) {
-            for (var s = 0; s < 7; s++) {
-              sparks.push({
-                x: bx, y: by, born: t,
-                a: (s / 7) * Math.PI * 2 + p.random(-0.3, 0.3),
-                sp: p.random(38, 78), key: b.filled
-              });
-            }
-          }
-        }
-        /* drawn in rising order of height, so a lifted bay's cap and cables
-           are never cut off by a taller neighbour drawn afterwards */
-        var order = bays.slice().sort(function (u, v) { return u.ez - v.ez; });
-        for (i = 0; i < order.length; i++) {
-          if (order[i] !== keyBay) { bay(p, order[i]); }
-        }
-
-        /* the one installed unit, brightening as the signal reaches it, on
-           top of everything else so its block never sits behind a neighbour */
-        var glow = Math.exp(-since_s * 1.5);
-        bay(p, keyBay);
-        if (glow > 0.01) {
-          var koff = { x: (5 + keyBay.ez + 6) * 0.5, y: -(5 + keyBay.ez + 6) * 0.32 };
-          p.noStroke();
-          p.fill(255, 255, 255, 150 * glow);
-          p.rect(KEYX + koff.x, KEYY + koff.y, CW, CH);
-        }
-
-        /* sparks: a short outward flick that fades, drawn above the bays */
-        if (!STILL) {
-          p.noStroke();
-          for (i = sparks.length - 1; i >= 0; i--) {
-            var sp2 = sparks[i];
-            var age = t - sp2.born;
-            if (age > 0.42) { sparks.splice(i, 1); continue; }
-            var f = 1 - age / 0.42;
-            var sx = sp2.x + Math.cos(sp2.a) * sp2.sp * age;
-            var sy = sp2.y + Math.sin(sp2.a) * sp2.sp * age - 30 * age;
-            p.fill(p.color(sp2.key ? C.mark : C.ink));
-            p.drawingContext.globalAlpha = f * f;
-            p.circle(sx, sy, 3.2 * f);
-          }
-          p.drawingContext.globalAlpha = 1;
-        }
-
-        if (!p.narrow) {
-          for (c = 0; c < COLS.length; c++) {
-            cx = COLS[c] + CW / 2;
-            label(p, 'A' + (c + 1), cx, 118, 10, C.gray, p.CENTER);
-            label(p, 'B' + (c + 1), cx, 448, 10, C.gray, p.CENTER);
-          }
-        }
-
-        /* service corridor, and the spine that taps every column */
-        p.stroke(p.color(C.haze));
-        p.strokeWeight(1);
-        p.line(WALL.x, 254, WALL.x + WALL.w, 254);
-        p.line(WALL.x, 294, WALL.x + WALL.w, 294);
-        p.drawingContext.setLineDash([3, 4]);
-        p.line(28, CORR_Y, 732, CORR_Y);
-        p.drawingContext.setLineDash([]);
-        for (c = 0; c < COLS.length; c++) {
-          cx = COLS[c] + CW / 2;
-          p.line(cx, 254, cx, 230);
-          p.line(cx, 294, cx, 330);
-          p.noStroke();
-          p.fill(p.color(C.haze));
-          p.circle(cx, CORR_Y, 3.5);
-          p.stroke(p.color(C.haze));
-        }
-        if (!p.narrow) {
-          label(p, 'service corridor, power and network spine',
-                380, 314, p.detail, C.gray, p.CENTER);
-        }
-
-        /* the signal running the spine */
-        p.noStroke();
-        var g;
-        for (g = 6; g >= 0; g--) {
-          var tx = sigX - g * 9;
-          if (tx < WALL.x) { continue; }
-          p.fill(p.color(C.mark));
-          p.drawingContext.globalAlpha = (1 - g / 7) * 0.85;
-          p.circle(tx, CORR_Y, 7);
-        }
-        p.drawingContext.globalAlpha = 1;
-
-        if (since_s < 0.9) {
-          var rise = Math.min(1, since_s / 0.45);
-          p.stroke(p.color(C.mark));
-          p.strokeWeight(2);
-          p.drawingContext.globalAlpha = 1 - Math.max(0, (since_s - 0.45) / 0.45);
-          p.line(BRANCH_X, CORR_Y, BRANCH_X, p.lerp(CORR_Y, KEYY + CH, rise));
-          p.drawingContext.globalAlpha = 1;
-        }
-
-        /* scale: the drawing's unit is one bay */
-        p.stroke(p.color(C.ink));
-        p.strokeWeight(1);
-        p.line(20, 492, 76, 492);
-        p.line(20, 487, 20, 497);
-        p.line(76, 487, 76, 497);
-        label(p, 'one bay = one machine', 84, 497, p.body, C.ink);
-      });
-    };
-  }
-
-  /* --- 3. The remote experimentation loop -------------------------------
-     One command runs the ring and comes back as an observation. The token
-     is the thing being passed: it leaves the team, and the loop is only
-     closed when it arrives back at the team along the return path, which
-     is why that segment is the one drawn in full weight.
-
-     The ring itself is squashed into an isometric ellipse, the standard way
-     a circle on a ground plane reads in that projection, so the loop sits
-     like a track rather than a flat badge. Hovering a node lifts it off the
-     track on a short pedestal and throws a burst of sparks, the same
-     explosive pop used across the other two drawings. */
-  function loopSketch(host) {
-    return function (p) {
-      var CX = 380, CY = 250, R = 150, SQ = 0.55;
-      /* The AI layer sits between observation and the team: it is what turns
-         what the camera saw into something the team can act on, so it belongs
-         on the return path rather than on the way out. */
-      var NODES = [
-        { th: 0,   t1: 'team',        t2: 'distributed',    ax: 'center', dy: -24 },
-        { th: 60,  t1: 'browser',     t2: 'or phone',       ax: 'left',   dy: 0 },
-        { th: 120, t1: 'machines',    t2: 'in Interlaken',  ax: 'left',   dy: 0 },
-        { th: 180, t1: 'sample',      t2: 'physical',       ax: 'center', dy: 32 },
-        { th: 240, t1: 'observation', t2: 'sensors, camera', ax: 'right', dy: 0 },
-        { th: 300, t1: 'AI layer',    t2: 'vision, world models', ax: 'right', dy: 0, key: true }
-      ];
-      var PERIOD = 9.0, HOVER_R = 40;
-      var sparks = [];
-
-      for (var ni = 0; ni < NODES.length; ni++) {
-        NODES[ni].ez = 0; NODES[ni].vz = 0; NODES[ni].hover = 0;
-      }
-
-      function pt(deg, rad) {
-        var a = p.radians(deg);
-        return { x: CX + (rad || R) * Math.sin(a), y: CY - (rad || R) * Math.cos(a) * SQ };
-      }
-
-      common(p, host, 760, 500, function (p, t) {
-        var i, b, seg, q;
-        var dt = Math.min(0.05, (p.deltaTime || 16) / 1000);
-
-        /* forward arcs with their arrowheads, then the return arc heavier */
-        for (i = 0; i < 6; i++) {
-          var from = i * 60 + 10, to = i * 60 + 50;
-          var isReturn = (i >= 4);   /* observation -> AI layer -> team */
-          p.noFill();
-          p.stroke(p.color(isReturn ? C.ink : C.haze));
-          p.strokeWeight(isReturn ? 2 : 1);
-          p.beginShape();
-          for (q = 0; q <= 24; q++) {
-            var d = p.lerp(from, to, q / 24);
-            var s = pt(d);
-            p.vertex(s.x, s.y);
-          }
-          p.endShape();
-          /* Tangent to the ellipse at the arrow tip, so the head still
-             points the right way once the ring is squashed. */
-          var end = pt(to), edge = pt(to - 2);
-          var tang = Math.atan2(end.y - edge.y, end.x - edge.x);
-          arrowHead(p, end.x, end.y, tang, isReturn ? 11 : 8,
-                    p.color(isReturn ? C.ink : C.haze));
-        }
-
-        /* the token: one command going round, one observation coming back */
-        var ph = (t % PERIOD) / PERIOD;
-        var tk = pt(ph * 360);
-        var onReturn = ph > 240 / 360;
-        p.noStroke();
-        p.fill(p.color(onReturn ? C.ink : C.mark));
-        p.circle(tk.x, tk.y, onReturn ? 13 : 11);
-        p.noFill();
-        p.stroke(p.color(onReturn ? C.ink : C.mark));
-        p.strokeWeight(1);
-        p.circle(tk.x, tk.y, 22 + 8 * Math.sin(t * 4));
-
-        /* nodes: hover physics, a pedestal when lifted, then the node */
-        for (i = 0; i < NODES.length; i++) {
-          var n = NODES[i], c = pt(n.th);
-          var dx = c.x - p.hx, dy = c.y - p.hy;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-          var target = (p.hoverOn && dist < HOVER_R) ? (1 - dist / HOVER_R) : 0;
-          var wasLow = n.hover < 0.35;
-          n.hover = p.lerp(n.hover, target, 1 - Math.pow(0.001, dt));
-          var az = (target * 30 - n.ez) * 60 - n.vz * 9;
-          n.vz = (n.vz + az * dt) * 0.9;
-          n.ez += n.vz * dt;
-          if (wasLow && n.hover > 0.35 && !STILL) {
-            for (var sp = 0; sp < 8; sp++) {
-              sparks.push({
-                x: c.x, y: c.y, born: t,
-                a: (sp / 8) * Math.PI * 2 + p.random(-0.3, 0.3),
-                sp: p.random(42, 86), key: !!n.key
-              });
-            }
-          }
-
-          var cy2 = c.y - n.ez;
-          if (n.ez > 1.5) {
-            p.stroke(p.color(C.haze));
-            p.strokeWeight(1);
-            p.drawingContext.globalAlpha = 0.45;
-            p.line(c.x, cy2, c.x, c.y);
-            p.drawingContext.globalAlpha = 1;
-          }
-
-          if (n.key) {
-            p.noStroke();
-            p.fill(p.color(C.mark));
-            p.circle(c.x, cy2, 22 + n.hover * 6);
-          } else {
-            p.fill(p.color(C.paper));
-            p.stroke(p.color(C.ink));
-            p.strokeWeight(1.5);
-            p.circle(c.x, cy2, 18 + n.hover * 6);
-          }
-
-          var lx, la;
-          if (n.ax === 'left')  { lx = c.x + 18; la = p.LEFT; }
-          else if (n.ax === 'right') { lx = c.x - 18; la = p.RIGHT; }
-          else { lx = c.x; la = p.CENTER; }
-
-          if (n.ax === 'center') {
-            label(p, n.t1, lx, cy2 + n.dy, p.body, C.ink, la);
-            if (!p.narrow) {
-              label(p, n.t2, lx, cy2 + n.dy + (n.dy < 0 ? -24 : 22), p.detail, C.gray, la);
-            }
-          } else {
-            label(p, n.t1, lx, cy2 - 5, p.body, C.ink, la);
-            if (!p.narrow) { label(p, n.t2, lx, cy2 + 17, p.detail, C.gray, la); }
-          }
-        }
-
-        /* sparks, drawn last so they read above nodes and labels */
-        if (!STILL) {
-          p.noStroke();
-          for (i = sparks.length - 1; i >= 0; i--) {
-            var s2 = sparks[i];
-            var age = t - s2.born;
-            if (age > 0.45) { sparks.splice(i, 1); continue; }
-            var f = 1 - age / 0.45;
-            var sx = s2.x + Math.cos(s2.a) * s2.sp * age;
-            var sy = s2.y + Math.sin(s2.a) * s2.sp * age * SQ - 34 * age;
-            p.fill(p.color(s2.key ? C.mark : C.ink));
-            p.drawingContext.globalAlpha = f * f;
-            p.circle(sx, sy, 3.4 * f);
-          }
-          p.drawingContext.globalAlpha = 1;
-        }
-
-        label(p, 'return path', 292, 104, p.body, C.ink, p.RIGHT);
-      });
-    };
-  }
-
-  /* --- Mount ------------------------------------------------------------ */
-  var MAKERS = { hero: heroSketch, plan: planSketch, loop: loopSketch };
-
-  var hosts = document.querySelectorAll('[data-sketch]');
-  for (var i = 0; i < hosts.length; i++) {
-    var host = hosts[i];
-    var maker = MAKERS[host.getAttribute('data-sketch')];
-    if (!maker) { continue; }
-    /* eslint-disable no-new */
-    new p5(maker(host), host);
-    host.parentNode.classList.add('has-sketch');
-  }
-});
 </script>
 
 <script>
