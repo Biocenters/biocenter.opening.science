@@ -1211,7 +1211,7 @@ body.is-editing #ed-open { visibility: hidden; }
 
   var REDUCE = window.matchMedia &&
                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var RADIUS = 70, STRENGTH = 46;
+  var RADIUS = 90, STRENGTH = 3400, SPRING = 72, DAMP = 0.85;
 
   function svgPoint(svg, clientX, clientY) {
     var pt = svg.createSVGPoint();
@@ -1256,9 +1256,9 @@ body.is-editing #ed-open { visibility: hidden; }
           ax = (dx / dist) * f * STRENGTH;
           ay = (dy / dist) * f * STRENGTH;
         }
-        ax += -n.ex * 40; ay += -n.ey * 40;
-        n.vx = (n.vx + ax * dt) * 0.82;
-        n.vy = (n.vy + ay * dt) * 0.82;
+        ax += -n.ex * SPRING; ay += -n.ey * SPRING;
+        n.vx = (n.vx + ax * dt) * DAMP;
+        n.vy = (n.vy + ay * dt) * DAMP;
         n.ex += n.vx * dt; n.ey += n.vy * dt;
         if (Math.abs(n.ex) > 0.02 || Math.abs(n.ey) > 0.02 || Math.abs(n.vx) > 0.02) {
           moving = true;
