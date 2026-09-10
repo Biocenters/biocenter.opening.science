@@ -1219,6 +1219,7 @@ body.is-editing #ed-open { visibility: hidden; }
 </script>
 
 <script>
+
 /* ---------------------------------------------------------------------------
    The three diagrams are the site's own static SVGs. On top of that
    unchanged artwork: the exact ambient motion the old p5 sketches carried —
@@ -1232,7 +1233,7 @@ body.is-editing #ed-open { visibility: hidden; }
 
   var REDUCE = window.matchMedia &&
                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var RADIUS = 90, STRENGTH = 3400, SPRING = 72, DAMP = 0.85;
+  var RADIUS = 90;
 
   function svgPoint(svg, clientX, clientY) {
     var pt = svg.createSVGPoint();
@@ -1257,8 +1258,8 @@ body.is-editing #ed-open { visibility: hidden; }
     }
   }
 
-  /* Hover: every dot, bay or node carries a spring that flees the pointer
-     and relaxes back the instant it moves on. */
+  /* Hover: nothing moves. Whatever the pointer is near catches a soft glow
+     along its own edge instead, eased in and out so it never snaps. */
   function setupHover(root, svg) {
     var sel = root.getAttribute('data-diagram') === 'plan'
       ? '.cell rect, rect.key'
@@ -1268,7 +1269,7 @@ body.is-editing #ed-open { visibility: hidden; }
     var els = Array.prototype.slice.call(svg.querySelectorAll(sel));
     var nodes = els.map(function (el) {
       var c = center(el);
-      return { el: el, hx: c.x, hy: c.y, ex: 0, ey: 0, vx: 0, vy: 0 };
+      return { el: el, hx: c.x, hy: c.y, g: 0 };
     });
     var mouse = { x: -9999, y: -9999 }, hovering = false, raf = null;
     function physics() {
@@ -1276,19 +1277,16 @@ body.is-editing #ed-open { visibility: hidden; }
       for (i = 0; i < nodes.length; i++) {
         n = nodes[i];
         var dx = n.hx - mouse.x, dy = n.hy - mouse.y;
-        var dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
-        var ax = 0, ay = 0;
-        if (hovering && dist < RADIUS) {
-          var f = 1 - dist / RADIUS; f *= f;
-          ax = (dx / dist) * f * STRENGTH;
-          ay = (dy / dist) * f * STRENGTH;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        var target = (hovering && dist < RADIUS) ? Math.pow(1 - dist / RADIUS, 2) : 0;
+        n.g += (target - n.g) * Math.min(1, dt * 10);
+        if (Math.abs(target - n.g) > 0.003) { moving = true; }
+        if (n.g > 0.003) {
+          n.el.style.filter = 'drop-shadow(0 0 ' + (2 + n.g * 5).toFixed(1) +
+            'px var(--mark)) brightness(' + (1 + n.g * 0.5).toFixed(2) + ')';
+        } else {
+          n.el.style.filter = '';
         }
-        ax += -n.ex * SPRING; ay += -n.ey * SPRING;
-        n.vx = (n.vx + ax * dt) * DAMP;
-        n.vy = (n.vy + ay * dt) * DAMP;
-        n.ex += n.vx * dt; n.ey += n.vy * dt;
-        if (Math.abs(n.ex) > 0.02 || Math.abs(n.ey) > 0.02 || Math.abs(n.vx) > 0.02) { moving = true; }
-        n.el.style.transform = 'translate(' + n.ex.toFixed(2) + 'px,' + n.ey.toFixed(2) + 'px)';
       }
       if (moving) { raf = requestAnimationFrame(physics); } else { raf = null; }
     }
@@ -1482,6 +1480,7 @@ body.is-editing #ed-open { visibility: hidden; }
   var roots = document.querySelectorAll('[data-diagram]');
   for (var i = 0; i < roots.length; i++) { setupDiagram(roots[i]); }
 }());
+
 
 </script>
 
