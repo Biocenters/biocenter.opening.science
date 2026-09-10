@@ -412,33 +412,32 @@ a { color: inherit; }
 }
 
 /* --- Diagrams: the page's own static SVGs, now interactive ------------- */
-/* opening.science runs its own diagrams this way: plain SVG, no canvas, no
-   drawing library. A magnetic scatter flees the pointer and a click tilts
-   the whole piece into an isometric view; the artwork underneath is exactly
-   what the page already draws with no script running at all. */
-.diagram {
-  width: 100%; cursor: pointer;
-  perspective: 1100px;
-}
-.diagram svg {
-  display: block; width: 100%; height: auto;
-  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transform-style: preserve-3d;
-}
-.diagram.is-tilted svg {
-  transform: rotateX(26deg) rotateY(-18deg) scale(0.93);
-}
+/* The page's own SVGs, the ones already authored to carry it with no script
+   running at all. A magnetic scatter flees the pointer, gently, on top of
+   the same ambient motion the p5 sketches used to carry: bolts on the
+   wiring, a signal down the corridor, a token round the loop. */
+.diagram { width: 100%; }
+.diagram svg { display: block; width: 100%; height: auto; }
 .diagram .hero-dot, .diagram .hero-key,
 .diagram .cell rect, .diagram rect.key,
 .diagram circle.node, .diagram circle.key {
   transform-box: fill-box; transform-origin: center;
 }
-.diagram:focus-visible { outline: 2px solid var(--blue); outline-offset: 6px; }
 .hero-key-ring { fill: none; stroke: var(--mark); stroke-width: 1.2; }
-.plan-signal, .loop-token { fill: var(--mark); }
-@media (prefers-reduced-motion: reduce) {
-  .diagram svg { transition: none; }
+.hero-bolt { fill: none; stroke: var(--mark); stroke-width: 2; stroke-linecap: round; opacity: 0; }
+.hero-web line.is-lit { animation: boltFlash 0.6s ease; }
+@keyframes boltFlash {
+  0%   { opacity: 1;    stroke: var(--mark); stroke-width: 2; }
+  100% { opacity: 0.22; stroke: var(--haze); stroke-width: 1; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .hero-web line.is-lit { animation: none; }
+}
+.plan-signal, .loop-token { fill: var(--mark); }
+.plan-branch { fill: none; stroke: var(--mark); stroke-width: 2; opacity: 0; }
+.plan-glow { fill: var(--paper); opacity: 0; }
+.loop-trail { fill: var(--mark); }
+.loop-halo { fill: none; stroke: var(--mark); stroke-width: 1.2; }
 
 .plate { position: relative; }
 
@@ -877,7 +876,17 @@ body.is-editing #ed-open { visibility: hidden; }
           <!-- service corridor -->
           <path class="line" d="M20 254 L740 254 M20 294 L740 294"></path>
           <text class="det" x="380" y="280" text-anchor="middle">service corridor</text>
-          <circle class="plan-signal" cy="274" cx="20" r="5"><animate attributeName="cx" values="20;740;20" dur="7s" repeatCount="indefinite"/></circle>
+          <circle class="plan-signal" cy="274" cx="20" r="5">
+            <animate attributeName="cx" values="20;740" dur="7s" repeatCount="indefinite"/>
+          </circle>
+          <path class="plan-branch" d="M232 274 L232 158">
+            <animate attributeName="opacity" dur="7s" repeatCount="indefinite"
+              keyTimes="0;0.286;0.294;0.5;0.51;1" values="0;0;1;1;0;0"/>
+          </path>
+          <rect class="plan-glow" x="204" y="128" width="56" height="30">
+            <animate attributeName="opacity" dur="7s" repeatCount="indefinite"
+              keyTimes="0;0.29;0.294;0.34;0.42;1" values="0;0;0.85;0.4;0;0"/>
+          </rect>
 
           <!-- bottom bank -->
           <g class="cell">
@@ -944,6 +953,10 @@ body.is-editing #ed-open { visibility: hidden; }
           <circle class="key" cx="250.1" cy="175" r="11"></circle>
           <path id="loopring" d="M380,100 A150,150 0 1,1 379.9,100 Z" fill="none" stroke="none"></path>
           <circle class="loop-token" r="7"><animateMotion dur="9s" repeatCount="indefinite" rotate="0"><mpath href="#loopring" xlink:href="#loopring"></mpath></animateMotion></circle>
+          <circle class="loop-trail" r="5.5" opacity="0.55"><animateMotion dur="9s" begin="0.09s" repeatCount="indefinite" rotate="0"><mpath href="#loopring" xlink:href="#loopring"></mpath></animateMotion></circle>
+          <circle class="loop-trail" r="4.5" opacity="0.35"><animateMotion dur="9s" begin="0.18s" repeatCount="indefinite" rotate="0"><mpath href="#loopring" xlink:href="#loopring"></mpath></animateMotion></circle>
+          <circle class="loop-trail" r="3.5" opacity="0.20"><animateMotion dur="9s" begin="0.28s" repeatCount="indefinite" rotate="0"><mpath href="#loopring" xlink:href="#loopring"></mpath></animateMotion></circle>
+          <circle class="loop-trail" r="2.5" opacity="0.10"><animateMotion dur="9s" begin="0.40s" repeatCount="indefinite" rotate="0"><mpath href="#loopring" xlink:href="#loopring"></mpath></animateMotion></circle>
 
           <!-- labels -->
           <text class="det" x="380" y="52" text-anchor="middle">distributed</text>
@@ -963,6 +976,13 @@ body.is-editing #ed-open { visibility: hidden; }
 
           <text x="232" y="170" text-anchor="end">AI layer</text>
           <text class="det" x="232" y="192" text-anchor="end">vision, world models</text>
+        
+          <circle class="loop-halo" cx="380.0" cy="100.0" r="16" opacity="0"><animate attributeName="opacity" dur="9s" repeatCount="indefinite" keyTimes="0.0000;0.1000;0.2200;1.0000" values="1;0.3;0.3;0"/></circle>
+          <circle class="loop-halo" cx="509.9" cy="175.0" r="13" opacity="0"><animate attributeName="opacity" dur="9s" repeatCount="indefinite" keyTimes="0.0000;0.1467;0.1667;0.2667;0.3867;1.0000" values="0;0.5;1;0.3;0.3;0"/></circle>
+          <circle class="loop-halo" cx="509.9" cy="325.0" r="13" opacity="0"><animate attributeName="opacity" dur="9s" repeatCount="indefinite" keyTimes="0.0000;0.3133;0.3333;0.4333;0.5533;1.0000" values="0;0.5;1;0.3;0.3;0"/></circle>
+          <circle class="loop-halo" cx="380.0" cy="400.0" r="13" opacity="0"><animate attributeName="opacity" dur="9s" repeatCount="indefinite" keyTimes="0.0000;0.4800;0.5000;0.6000;0.7200;1.0000" values="0;0.5;1;0.3;0.3;0"/></circle>
+          <circle class="loop-halo" cx="250.1" cy="325.0" r="13" opacity="0"><animate attributeName="opacity" dur="9s" repeatCount="indefinite" keyTimes="0.0000;0.6467;0.6667;0.7667;0.8867;1.0000" values="0;0.5;1;0.3;0.3;0"/></circle>
+          <circle class="loop-halo" cx="250.1" cy="175.0" r="16" opacity="0"><animate attributeName="opacity" dur="9s" repeatCount="indefinite" keyTimes="0.0000;0.8133;0.8333;0.9333;1.0000" values="0;0.5;1;0.3;0.3"/></circle>
         </svg></div>
       </figure>
 
@@ -1201,10 +1221,10 @@ body.is-editing #ed-open { visibility: hidden; }
 <script>
 /* ---------------------------------------------------------------------------
    The three diagrams are the site's own static SVGs, the ones already
-   authored to carry the page with no script at all. This adds two things on
-   top of that unchanged artwork: a gentle magnetic scatter that flees the
-   pointer, and a click that tilts the whole diagram into an isometric view.
-   No canvas, no drawing library: plain DOM, the way opening.science does it.
+   authored to carry the page with no script at all. On top of that unchanged
+   artwork: the ambient motion the old p5 sketches carried (bolts on the
+   hero's wiring, a signal down the plan's corridor, a token round the loop),
+   plus a gentle magnetic scatter that flees the pointer on hover.
 --------------------------------------------------------------------------- */
 (function () {
   'use strict';
@@ -1227,9 +1247,9 @@ body.is-editing #ed-open { visibility: hidden; }
     return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
   }
 
-  function setupDiagram(root) {
-    var svg = root.querySelector('svg');
-    if (!svg) { return; }
+  /* Hover: every dot, bay or node carries a spring that flees the pointer
+     and relaxes back the instant it moves on. */
+  function setupHover(root, svg) {
     var sel = root.getAttribute('data-diagram') === 'plan'
       ? '.cell rect, rect.key'
       : root.getAttribute('data-diagram') === 'loop'
@@ -1240,12 +1260,10 @@ body.is-editing #ed-open { visibility: hidden; }
       var c = center(el);
       return { el: el, hx: c.x, hy: c.y, ex: 0, ey: 0, vx: 0, vy: 0 };
     });
-
     var mouse = { x: -9999, y: -9999 }, hovering = false, raf = null;
 
     function physics() {
-      var i, n, dt = 1 / 60;
-      var moving = false;
+      var i, n, dt = 1 / 60, moving = false;
       for (i = 0; i < nodes.length; i++) {
         n = nodes[i];
         var dx = n.hx - mouse.x, dy = n.hy - mouse.y;
@@ -1260,16 +1278,12 @@ body.is-editing #ed-open { visibility: hidden; }
         n.vx = (n.vx + ax * dt) * DAMP;
         n.vy = (n.vy + ay * dt) * DAMP;
         n.ex += n.vx * dt; n.ey += n.vy * dt;
-        if (Math.abs(n.ex) > 0.02 || Math.abs(n.ey) > 0.02 || Math.abs(n.vx) > 0.02) {
-          moving = true;
-        }
+        if (Math.abs(n.ex) > 0.02 || Math.abs(n.ey) > 0.02 || Math.abs(n.vx) > 0.02) { moving = true; }
         n.el.style.transform = 'translate(' + n.ex.toFixed(2) + 'px,' + n.ey.toFixed(2) + 'px)';
       }
       if (moving) { raf = requestAnimationFrame(physics); } else { raf = null; }
     }
-
     function kick() { if (!raf) { raf = requestAnimationFrame(physics); } }
-
     function onMove(e) {
       var t = e.touches ? e.touches[0] : e;
       var p = svgPoint(svg, t.clientX, t.clientY);
@@ -1279,33 +1293,78 @@ body.is-editing #ed-open { visibility: hidden; }
     }
     function onLeave() { hovering = false; kick(); }
 
-    if (!REDUCE) {
-      svg.addEventListener('pointermove', onMove);
-      svg.addEventListener('pointerleave', onLeave);
-      svg.addEventListener('touchmove', onMove, { passive: true });
-      svg.addEventListener('touchend', onLeave);
-    } else {
+    svg.addEventListener('pointermove', onMove);
+    svg.addEventListener('pointerleave', onLeave);
+    svg.addEventListener('touchmove', onMove, { passive: true });
+    svg.addEventListener('touchend', onLeave);
+  }
+
+  /* Hero ambient motion: bolts running the wiring, two in five of them
+     starting at the one installed unit, ported from the original p5 sketch
+     onto the page's own <line> elements — no canvas, just flashing the
+     wiring that is already there. */
+  function setupBolts(svg) {
+    var web = svg.querySelector('.hero-web');
+    var key = svg.querySelector('.hero-key');
+    if (!web || !key) { return; }
+    var lines = Array.prototype.slice.call(web.querySelectorAll('line'));
+    if (!lines.length) { return; }
+
+    function keyOf(x, y) { return x.toFixed(1) + ',' + y.toFixed(1); }
+    var adj = {};
+    lines.forEach(function (ln) {
+      var a = keyOf(+ln.getAttribute('x1'), +ln.getAttribute('y1'));
+      var b = keyOf(+ln.getAttribute('x2'), +ln.getAttribute('y2'));
+      (adj[a] = adj[a] || []).push({ line: ln, to: b });
+      (adj[b] = adj[b] || []).push({ line: ln, to: a });
+    });
+    var keyKey = keyOf(+key.getAttribute('cx'), +key.getAttribute('cy'));
+    var allKeys = Object.keys(adj);
+
+    function flash(ln) {
+      /* Restart the CSS animation even if this edge is still mid-flash from
+         an earlier bolt: drop the class, force a reflow, put it back. */
+      ln.classList.remove('is-lit');
+      void ln.getBoundingClientRect();
+      ln.classList.add('is-lit');
+    }
+
+    function spawn() {
+      var from = (Math.random() < 0.4 && adj[keyKey]) ? keyKey
+        : allKeys[Math.floor(Math.random() * allKeys.length)];
+      var hops = 2 + Math.floor(Math.random() * 3);
+      var visited = { }, cur = from, i;
+      var path = [];
+      for (i = 0; i < hops; i++) {
+        var opts = (adj[cur] || []).filter(function (o) { return !visited[o.to]; });
+        if (!opts.length) { break; }
+        var pick = opts[Math.floor(Math.random() * opts.length)];
+        path.push(pick.line);
+        visited[cur] = true;
+        cur = pick.to;
+      }
+      path.forEach(function (ln, idx) {
+        setTimeout(function () { flash(ln); }, idx * 90);
+      });
+    }
+
+    function loop() {
+      spawn();
+      setTimeout(loop, 180 + Math.random() * 340);
+    }
+    loop();
+  }
+
+  function setupDiagram(root) {
+    var svg = root.querySelector('svg');
+    if (!svg) { return; }
+    setupHover(root, svg);
+    if (!REDUCE && root.getAttribute('data-diagram') === 'hero') { setupBolts(svg); }
+    if (REDUCE) {
       var motions = svg.querySelectorAll('animate, animateMotion');
       for (var m = 0; m < motions.length; m++) { motions[m].setAttribute('repeatCount', '1'); }
       if (svg.pauseAnimations) { svg.pauseAnimations(); }
     }
-
-    /* Click tilts the whole diagram into an isometric view and back. The
-       pointer math above keeps working mid-tilt: getScreenCTM reads the
-       live CSS transform, so the scatter still targets the right pixels. */
-    root.addEventListener('click', function () {
-      root.classList.toggle('is-tilted');
-    });
-    var t = svg.querySelector('title');
-    root.setAttribute('tabindex', '0');
-    root.setAttribute('role', 'button');
-    root.setAttribute('aria-label', (t ? t.textContent : 'Diagram') + ', click or press Enter to tilt in 3D');
-    root.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        root.classList.toggle('is-tilted');
-      }
-    });
   }
 
   var roots = document.querySelectorAll('[data-diagram]');
