@@ -207,11 +207,7 @@
     padding: 0.25rem;
     box-sizing: content-box;
   }
-  /* The footer lockup switches to the supplied negative artwork. */
-  .osf-lockup.is-positive { display: none; }
-  .osf-lockup.is-negative { display: block; }
 }
-.osf-lockup.is-negative { display: none; }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -575,6 +571,13 @@ figure { margin: 0; }
   color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em;
 }
 .osf-lockup { width: 11rem; height: auto; }
+/* The footer lockup switches to the supplied negative artwork on a dark
+   ground. Declared after .osf-lockup so the cascade resolves the right way. */
+.osf-lockup.is-negative { display: none; }
+@media (prefers-color-scheme: dark) {
+  .osf-lockup.is-positive { display: none; }
+  .osf-lockup.is-negative { display: block; }
+}
 .hosted-by a:focus-visible { outline: 2px solid var(--blue-ink); outline-offset: 4px; }
 
 /* LicenseNotice, per osf-brand/web-harness: one quiet mono line on a
