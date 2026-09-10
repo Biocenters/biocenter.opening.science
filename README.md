@@ -2,6 +2,8 @@
 
 **A laboratory you can operate from anywhere.**
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22685448.svg)](https://doi.org/10.5281/zenodo.22685448)
+
 <https://biocenter.opening.science>
 
 ## Intro

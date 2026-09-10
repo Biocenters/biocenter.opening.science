@@ -3,6 +3,7 @@ message: If you refer to this work, please cite it as below.
 title: "Open Biocenter: a laboratory you can operate from anywhere"
 type: software
 license: CC-BY-4.0
+doi: 10.5281/zenodo.22685448
 url: https://biocenter.opening.science/
 repository-code: https://github.com/Biocenters/biocenter.opening.science
 authors:
