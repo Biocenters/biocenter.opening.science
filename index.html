@@ -426,7 +426,7 @@ a { color: inherit; }
 .hero-key-ring { fill: none; stroke: var(--mark); stroke-width: 1.2; opacity: 0; }
 .hero-bolt { fill: none; stroke-linecap: round; opacity: 0; }
 .plan-signal { fill: var(--mark); opacity: 0; }
-.plan-branch { fill: none; stroke-width: 2; opacity: 0; }
+.plan-branch { fill: none; stroke: var(--mark); stroke-width: 2; opacity: 0; }
 .plan-glow { fill: var(--paper); opacity: 0; }
 .loop-token { opacity: 1; }
 .loop-ring { fill: none; stroke-width: 1.4; opacity: 0; }
@@ -1246,8 +1246,15 @@ body.is-editing #ed-open { visibility: hidden; }
     var b = el.getBBox();
     return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
   }
+  /* opacity goes through inline style: a stylesheet rule for a class
+     always beats a presentation attribute of the same name in SVG, no
+     matter the selector, so setAttribute('opacity', ...) here would be
+     silently overruled by the element's own resting-state CSS rule. */
   function set(el, attrs) {
-    for (var k in attrs) { el.setAttribute(k, attrs[k]); }
+    for (var k in attrs) {
+      if (k === 'opacity') { el.style.opacity = attrs[k]; }
+      else { el.setAttribute(k, attrs[k]); }
+    }
   }
 
   /* Hover: every dot, bay or node carries a spring that flees the pointer
