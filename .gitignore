@@ -3,5 +3,3 @@
 fonts/
 # Rolling snapshots kept by the server, not history.
 .backups/
-.gstack/
-__pycache__/
