@@ -33,7 +33,7 @@ by cell, with magnets and heaters acting on the droplet as it travels. Samples
 and reagents sit on the shelf below. A console reports the state of the
 machine, and the unit answers to a web page over the network.
 
-Live control page: <https://opendrop.151-115-76-163.sslip.io/>
+Live control page: [external-service notice](https://biocenter.opening.science/external-control.html).
 
 ## Features
 
@@ -89,7 +89,7 @@ free to share, adapt and build on, with attribution.
 ## This repository
 
 The site is one self-contained page. `index.html` carries its own CSS, its
-p5.js sketches and its images, so deploying it means copying a single file. It
+p5.js sketches and its images, and is accompanied by `external-control.html`, the exit notice for the live control interface. Deploy both HTML files and the existing static assets. It
 follows the Open Science Foundation brand,
 [osf-brand](https://github.com/Opening-Science/osf-brand).
 
@@ -118,3 +118,23 @@ server within five minutes and deployed, so contributors do not need shell
 access to change the site. A local edit and a merged pull request landing at
 the same time are reconciled by rebase.
 
+
+## External control notice
+
+Both control links go through `/external-control.html`. The notice works without
+JavaScript, shows the fixed destination and offers a return link. Only Continue
+contacts the control service; it sends no Referer header. Do not add automatic
+redirects, destination query parameters, embeds or prefetching. The page's fonts
+and tokens are copied from index.html; keep those blocks in sync when restyling.
+
+Before release, confirm with the partner the service operator, support contact,
+privacy/terms URLs and whether access is public or limited to authorised users.
+The current copy intentionally does not guess an operator or promise public
+access. The notice does not grant permission to operate equipment.
+
+Deployment: verify `/external-control.html` is served as its own file (not the
+homepage fallback) after the repository sync. A deployment copying only
+index.html must be updated to copy this file too. No server configuration or
+hardware-access controls are changed by this PR.
+
+Run `python3 -m unittest discover -s tests -v` for navigation-boundary checks.
